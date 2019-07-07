@@ -1,1 +1,9 @@
-language: bash
+sudo: required
+dist: xenial
+services: [docker]
+
+script:
+  - docker run -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft sh -c "apt update && snapcraft"
+  - sudo apt install --yes snapd
+  - sudo snap install *.snap --dangerous
+  - metanorma help

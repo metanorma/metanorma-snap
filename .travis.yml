@@ -7,3 +7,4 @@ script:
   - sudo apt install --yes snapd
   - sudo snap install *.snap --devmode
   - metanorma help
+  - for adoc in ./tests/*.adoc; do metanorma compile $adoc; done

@@ -1,0 +1,8 @@
+= Test ISO
+Author
+:docfile: test.adoc
+:nodoc:
+:novalid:
+:no-isobib:
+:mn-document-class: iso
+:mn-output-extensions: xml,pdf,html,doc,html_alt

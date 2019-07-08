@@ -22,7 +22,6 @@ parts:
     nodejs-version: '11.15.0'
     source: https://github.com/GoogleChrome/puppeteer.git
     source-tag: v1.10.0
-    # TODO cut stage-packages below once https://github.com/metanorma/metanorma/pull/70 will be released
     stage-packages: [libx11-6, libx11-xcb1, libxcomposite1, libxcursor1, libxdamage1, libxext6, libxfixes3, libxi6, libxrandr2, libxrender1, libxss1, libxtst6, libnss3, libcups2, libatk1.0-0, libatk-bridge2.0-0, libgdk-pixbuf2.0-0, libglib2.0-0, libgtk-3-0, libasound2]
   plantuml:
     plugin: maven
@@ -45,9 +44,8 @@ parts:
 apps:
   metanorma:
     environment:
-      NODE_PATH: $SNAP/node_modules
       GEM_PATH: $SNAP/lib/ruby/gems/2.5.0
       PATH: $SNAP/idnits:$PATH
-    command: ruby $SNAP/bin/metanorma
+    command: env NODE_PATH=$SNAP/lib/node_modules ruby $SNAP/bin/metanorma
   plantuml:
     command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar

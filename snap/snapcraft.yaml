@@ -37,7 +37,7 @@ parts:
     stage-packages: [libxml2, libxml2-dev, libxslt1-dev, libicu-dev]
   xml2rfc:
     plugin: python
-    python-version: python3
+    python-version: python2
     python-packages: [idnits, xml2rfc]
   idnits:
     plugin: dump

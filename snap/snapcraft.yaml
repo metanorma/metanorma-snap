@@ -15,7 +15,7 @@ parts:
     plugin: gem
     ruby-version: '2.5.5'
     source: https://github.com/metanorma/metanorma-cli.git
-    source-tag: v1.1.8
+    source-tag: v1.2.2
     stage-packages: [git]
   puppeteer:
     plugin: nodejs

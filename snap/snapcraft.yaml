@@ -16,7 +16,7 @@ parts:
     ruby-version: '2.5.5'
     source: https://github.com/metanorma/metanorma-cli.git
     source-tag: v1.1.8
-    # stage-packages: [sassc]
+    stage-packages: [git]
   puppeteer:
     plugin: nodejs
     nodejs-version: '11.15.0'

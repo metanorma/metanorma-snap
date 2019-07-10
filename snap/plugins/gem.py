@@ -10,7 +10,7 @@ from snapcraft.sources import Tar
 
 logger = logging.getLogger(__name__)
 
-# Insupred by https://github.com/snapcore/snapcraft/blob/master/snapcraft/plugins/ruby.py
+# Insupired by https://github.com/snapcore/snapcraft/blob/master/snapcraft/plugins/ruby.py
 # Probably we will move to it later
 class GemPlugin(BasePlugin):
     @classmethod

@@ -1,6 +1,6 @@
 name: metanorma
 base: core18
-version: '1.1.8'
+version: '1.2.2'
 summary: Metanorma documentation generator
 description: |
   Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
@@ -18,10 +18,9 @@ parts:
     source-tag: v1.2.2
     stage-packages: [git]
   puppeteer:
-    plugin: nodejs
-    nodejs-version: '11.15.0'
-    source: https://github.com/GoogleChrome/puppeteer.git
-    source-tag: v1.10.0
+    plugin: npm
+    nodejs-version: '12.4.0'
+    nodejs-packages: [puppeteer@1.17.0]
     stage-packages: [libx11-6, libx11-xcb1, libxcomposite1, libxcursor1, libxdamage1, libxext6, libxfixes3, libxi6, libxrandr2, libxrender1, libxss1, libxtst6, libnss3, libcups2, libatk1.0-0, libatk-bridge2.0-0, libgdk-pixbuf2.0-0, libglib2.0-0, libgtk-3-0, libasound2]
   plantuml:
     plugin: maven
@@ -45,7 +44,8 @@ apps:
   metanorma:
     environment:
       GEM_PATH: $SNAP/lib/ruby/gems/2.5.0
-      PATH: $SNAP/idnits:$PATH
-    command: env NODE_PATH=$SNAP/lib/node_modules ruby $SNAP/bin/metanorma
+      PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
+      NODE_PATH: $SNAP/node_modules
+    command: ruby $SNAP/bin/metanorma
   plantuml:
     command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar

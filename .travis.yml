@@ -3,8 +3,15 @@ dist: xenial
 services: [docker]
 
 script:
+  # build & install snap
   - docker run -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft sh -c "apt update && snapcraft"
   - sudo apt install --yes snapd
   - sudo snap install *.snap --devmode
   - metanorma help
+  # install puppeteer
+  - curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+  - sudo apt-get install -y nodejs
+  - curl -L "https://raw.githubusercontent.com/metanorma/metanorma-linux-setup/master/ubuntu-install-puppeteer.sh" | sudo bash
+  - export NODE_PATH=/usr/lib/node_modules
+  # test
   - for adoc in ./tests/*.adoc; do metanorma compile $adoc; done

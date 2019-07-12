@@ -22,7 +22,6 @@ before_install:
   - openssl aes-256-cbc -K $encrypted_a0f921dc910d_key -iv $encrypted_a0f921dc910d_iv -in snap_token.enc -out snap_token -d
 script:
   - docker run -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft sh -c "apt update && snapcraft"
-  - sudo apt install --yes snapd
   - sudo snap install *.snap --devmode
   - metanorma help
   - for adoc in ./tests/*.adoc; do metanorma compile $adoc; done

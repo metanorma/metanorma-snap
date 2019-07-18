@@ -1,3 +1,4 @@
 /snap/plugins/__pycache__
 *.snap
 .tmp.xml
+snap_token

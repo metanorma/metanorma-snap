@@ -33,7 +33,7 @@ class CpanmPlugin(snapcraft.BasePlugin):
         if self.options.run_test == False:
             self._install_cmd.append('--notest')
 
-        self._install_cmd.append(' '.join(self.options.cpanm_packages))
+        self._install_cmd.extend(self.options.cpanm_packages)
 
     def pull(self):
         super().pull()

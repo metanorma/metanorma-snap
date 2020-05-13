@@ -1,6 +1,6 @@
 name: metanorma
 base: core18
-version: '1.2.2'
+version: '1.2.11'
 summary: Metanorma documentation generator
 description: |
   Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
@@ -10,18 +10,38 @@ description: |
 grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: devmode # use 'strict' once you have the right plugs and slots
 
+apps:
+  metanorma:
+    command: ruby $SNAP/bin/metanorma
+    environment:
+      GEM_PATH: $SNAP/lib/ruby/gems/2.5.0
+      PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
+      DEBUG: "*:*"
+    plugs:
+      - browser-support
+      - network
+      - gsettings
+      - home
+  plantuml:
+    command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar
+
 parts:
   metanorma-cli:
     plugin: gem
     ruby-version: '2.5.5'
     source: https://github.com/metanorma/metanorma-cli.git
-    source-tag: v1.2.2
-    stage-packages: [git]
-  puppeteer:
-    plugin: npm
-    nodejs-version: '12.4.0'
-    nodejs-packages: [puppeteer@1.17.0]
-    stage-packages: [libx11-6, libx11-xcb1, libxcomposite1, libxcursor1, libxdamage1, libxext6, libxfixes3, libxi6, libxrandr2, libxrender1, libxss1, libxtst6, libnss3, libcups2, libatk1.0-0, libatk-bridge2.0-0, libgdk-pixbuf2.0-0, libglib2.0-0, libgtk-3-0, libasound2]
+    source-tag: v1.2.11
+    stage-packages:
+      - git
+      - libbz2-1.0
+      - zlib1g
+      - libgcrypt20
+      - liblzma5
+      - libdb5.3
+      - libselinux1
+      - libsystemd0
+      - libtinfo5
+      - libudev1
   plantuml:
     plugin: maven
     maven-version: '3.5.2'
@@ -29,23 +49,30 @@ parts:
     maven-options: [-DskipTests=true, -Dmaven.javadoc.skip=true]
     source: https://github.com/plantuml/plantuml.git
     source-tag: v1.2019.7
+    stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g]
   latexml:
     plugin: cpanm
-    cpanm-packages: [LaTeXML@0.8.4]
-    stage-packages: [libxml2, libxml2-dev, libxslt1-dev, libicu-dev]
+    cpanm-packages: ['XML::LibXSLT@1.96', LaTeXML@0.8.4]
+    stage-packages:
+      - libxml2
+      - libxml2-dev
+      - libxslt1-dev
+      - libicu-dev
+      - libbz2-1.0
+      - libgcrypt20
+      - liblzma5
+      - zlib1g
+      - libdb5.3
   xml2rfc:
     plugin: python
     python-version: python2
     python-packages: [idnits, xml2rfc]
+    stage-packages:
+      - libbz2-1.0
+      - libtinfo5
+      - zlib1g
+      - libdb5.3
+      - libncursesw5
   idnits:
     plugin: dump
     source: https://tools.ietf.org/tools/idnits/idnits-2.16.02.tgz
-apps:
-  metanorma:
-    environment:
-      GEM_PATH: $SNAP/lib/ruby/gems/2.5.0
-      PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
-      NODE_PATH: $SNAP/node_modules
-    command: ruby $SNAP/bin/metanorma
-  plantuml:
-    command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar

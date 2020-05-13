@@ -29,7 +29,10 @@ jobs:
           sudo chmod -R g-s ./squashfs-root
           snapcraft pack squashfs-root --output metanorma_fixed.snap
       - name: Push to snapcraft.io
+        env: 
+          SNAPCRAFT_TOKEN: ${{ secrets.snapcraft_token }}
         run: |
-          echo "${{ secrets.snapcraft_token }}" > .snapcraft/snapcraft.cfg
+          mkdir -p .snapcraft
+          echo "${SNAPCRAFT_TOKEN}" > .snapcraft/snapcraft.cfg
           snapcraft login --with .snapcraft/snapcraft.cfg
           snapcraft push --release=stable metanorma_fixed.snap

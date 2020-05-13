@@ -1,0 +1,38 @@
+image:https://github.com/metanorma/latexml-snap/workflows/ubuntu/badge.svg["Build Status", link="https://github.com/metanorma/latexml-snap/actions?query=workflow%3Aubuntu"]
+
+= metanorma-snap: Metanorma Snap Package
+
+== Installation
+
+The released Metanorma snap package is located at Snapcraft: https://snapcraft.io/metanorma[Metanorma snap].
+
+== Building the package
+
+* Run `snapcraft snap` in the root directory of this repo
+
+
+== Testing the package
+
+If you are on macOS you can install snap to any of your multipass instances with:
+
+[source,sh]
+----
+multipass transfer metanorma_*_amd64.snap ${instance-name}:/home/multipass
+multipass shell ${instance-name}
+sudo snap install --devmode metanorma_*_amd64.snap
+----
+
+After this the snap is ready to use.
+
+=== Testing uninstallation
+
+Execute the following command to uninstall LaTeXML.
+
+[source,sh]
+----
+sudo snap remove metanorma
+----
+
+After executing the uninstall ensure that the `metanorma` executable is no longer found.
+
+You can also try running `metanorma help` from the command-line to see if it is still installed.

@@ -44,6 +44,10 @@ jobs:
         with:
           name: metanorma-snap
           path: ./snap
+      - uses: kolpav/purge-artifacts-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          expire-in: 0
       - name: Install snap
         run: |
           sudo snap install snap/metanorma_fixed.snap --devmode

@@ -52,7 +52,7 @@ parts:
     stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g]
   latexml:
     plugin: cpanm
-    cpanm-packages: [LaTeXML@0.8.4]
+    cpanm-packages: ['XML::LibXSLT@1.96', LaTeXML@0.8.4]
     stage-packages:
       - libxml2
       - libxml2-dev

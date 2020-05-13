@@ -65,6 +65,7 @@ parts:
       - libdb5.3
   xml2rfc:
     plugin: python
+    python-version: python2
     python-packages: [idnits, xml2rfc]
     stage-packages:
       - libbz2-1.0

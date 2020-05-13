@@ -25,7 +25,7 @@ jobs:
         run: |
           unsquashfs metanorma.snap
           sudo chmod -R g-s ./squashfs-root
-          snapcraft pack squashfs-root --output metanorma_fixed.snap
+          mksquashfs ./squashfs-root ./metanorma_fixed.snap -noappend -comp xz -all-root -no-xattrs -no-fragments
       - uses: actions/upload-artifact@v1
         with:
           name: metanorma-snap

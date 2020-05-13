@@ -27,7 +27,7 @@ jobs:
         run: |
           unsquashfs metanorma.snap
           sudo chmod -R g-s ./squashfs-root
-          snapcraft pack squashfs-root --output metanorma_fixed.snap
+          mksquashfs ./squashfs-root ./metanorma_fixed.snap -noappend -comp xz -all-root -no-xattrs -no-fragments
       - name: Push to snapcraft.io
         env: 
           SNAPCRAFT_TOKEN: ${{ secrets.snapcraft_token }}

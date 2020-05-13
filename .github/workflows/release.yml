@@ -35,4 +35,4 @@ jobs:
           mkdir -p .snapcraft
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft/snapcraft.cfg
           snapcraft login --with .snapcraft/snapcraft.cfg
-          snapcraft push --release=stable metanorma_fixed.snap
+          snapcraft push --release=beta metanorma_fixed.snap

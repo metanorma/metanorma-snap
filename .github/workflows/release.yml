@@ -1,0 +1,41 @@
+name: release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  deploy:
+    name: Release to snapcraft
+    runs-on: ubuntu-latest
+    container:
+      image: snapcore/snapcraft
+    steps:
+      - uses: actions/checkout@master
+      - name: Snapcraft setup
+        run: |
+          sudo apt update
+          sudo apt install -y snapd
+          sudo apt-get update
+          sudo apt-get install -y squashfs-tools python3
+          snapcraft --version
+      - name: Build snap
+        run: |
+          snapcraft snap --output metanorma.snap
+      - name: Fix snap
+        run: |
+          unsquashfs metanorma.snap
+          sudo chmod -R g-s ./squashfs-root
+          snapcraft pack squashfs-root --output metanorma_fixed.snap
+      - name: Install snap
+        run: |
+          sudo snap install metanorma_fixed.snap --devmode
+      - name: Test snap
+        run: |
+          for adoc in ./tests/*.adoc; do metanorma compile $adoc; done
+      - name: Push to snapcraft.io
+        run: |
+          echo "${{ secrets.snapcraft_token }}" > .snapcraft/snapcraft.cfg
+          snapcraft login --with .snapcraft/snapcraft.cfg
+          snapcraft push --release=stable metanorma_fixed.snap

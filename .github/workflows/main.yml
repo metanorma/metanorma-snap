@@ -1,0 +1,52 @@
+name: main
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build metanorma snap
+    runs-on: ubuntu-latest
+    container:
+      image: snapcore/snapcraft:stable
+    steps:
+      - uses: actions/checkout@v1
+      - name: Snapcraft setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y squashfs-tools python3
+          snapcraft --version
+      - name: Build snap
+        run: |
+          snapcraft snap --output metanorma.snap
+      - name: Fix snap
+        run: |
+          unsquashfs metanorma.snap
+          sudo chmod -R g-s ./squashfs-root
+          snapcraft pack squashfs-root --output metanorma_fixed.snap
+      - uses: actions/upload-artifact@v1
+        with:
+          name: metanorma-snap
+          path: metanorma_fixed.snap
+  test:
+    name: Test metanorma snap
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Snapcraft setup
+        run: |
+          sudo apt update
+          sudo apt install -y snapd
+      - uses: actions/download-artifact@v1
+        with:
+          name: metanorma-snap
+          path: ./snap
+      - name: Install snap
+        run: |
+          sudo snap install snap/metanorma_fixed.snap --devmode
+      - name: Test snap
+        run: |
+          for adoc in ./tests/*.adoc; do metanorma compile $adoc; done

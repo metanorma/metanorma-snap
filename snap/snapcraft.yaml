@@ -73,6 +73,12 @@ parts:
       - zlib1g
       - libdb5.3
       - libncursesw5
+    override-stage: |
+      snapcraftctl stage
+      chmod 0755 ./local/lib/python2.7
+      chmod 0755 ./local/lib/python2.7/dist-packages
+      chmod 0755 ./local/lib/python2.7/site-packages
+      chmod 0755 ./local/share/fonts
   idnits:
     plugin: dump
     source: https://tools.ietf.org/tools/idnits/idnits-2.16.02.tgz

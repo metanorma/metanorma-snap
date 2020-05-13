@@ -1,6 +1,6 @@
 name: metanorma
 base: core18
-version: '1.2.2'
+version: '1.2.11'
 summary: Metanorma documentation generator
 description: |
   Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
@@ -30,7 +30,7 @@ parts:
     plugin: gem
     ruby-version: '2.5.5'
     source: https://github.com/metanorma/metanorma-cli.git
-    source-tag: v1.2.2
+    source-tag: v1.2.11
     stage-packages:
       - git
       - libbz2-1.0

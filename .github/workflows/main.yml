@@ -20,7 +20,7 @@ jobs:
           snapcraft --version
       - name: Build snap
         run: |
-          snapcraft snap --output metanorma.snap
+          snapcraft snap --debug --output metanorma.snap
       - name: Fix snap
         run: |
           unsquashfs metanorma.snap

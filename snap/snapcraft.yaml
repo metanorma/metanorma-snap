@@ -32,7 +32,6 @@ parts:
       metanorma-linux-x64: bin/metanorma
     stage-packages:
       - git
-      - libbz2-1.0
       - zlib1g
       - libgcrypt20
       - liblzma5

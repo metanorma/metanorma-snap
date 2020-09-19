@@ -50,19 +50,6 @@ parts:
     source: https://github.com/plantuml/plantuml.git
     source-tag: v1.2019.7
     stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g]
-  latexml:
-    plugin: cpanm
-    cpanm-packages: ['XML::LibXSLT@1.96', LaTeXML@0.8.4]
-    stage-packages:
-      - libxml2
-      - libxml2-dev
-      - libxslt1-dev
-      - libicu-dev
-      - libbz2-1.0
-      - libgcrypt20
-      - liblzma5
-      - zlib1g
-      - libdb5.3
   xml2rfc:
     plugin: python
     python-version: python3

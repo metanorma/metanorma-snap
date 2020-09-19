@@ -60,9 +60,9 @@ parts:
       - zlib1g
       - libdb5.3
       - libncursesw5
-    override-stage: |
-      snapcraftctl stage
-      chmod 0755 ./local/share/fonts
+    # override-stage: |
+    #   snapcraftctl stage
+    #   chmod 0755 ./local/share/fonts
   idnits:
     plugin: dump
     source: https://tools.ietf.org/tools/idnits/idnits-2.16.02.tgz

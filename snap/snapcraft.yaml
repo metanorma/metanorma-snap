@@ -1,6 +1,6 @@
 name: metanorma
 base: core18
-version: '1.2.11'
+version: '1.3.7.3'
 summary: Metanorma documentation generator
 description: |
   Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
@@ -12,9 +12,8 @@ confinement: devmode # use 'strict' once you have the right plugs and slots
 
 apps:
   metanorma:
-    command: ruby $SNAP/bin/metanorma
+    command: $SNAP/bin/metanorma
     environment:
-      GEM_PATH: $SNAP/lib/ruby/gems/2.5.0
       PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
       DEBUG: "*:*"
     plugs:
@@ -26,11 +25,11 @@ apps:
     command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar
 
 parts:
-  metanorma-cli:
-    plugin: gem
-    ruby-version: '2.5.5'
-    source: https://github.com/metanorma/metanorma-cli.git
-    source-tag: v1.2.11
+  packed-mn:
+    plugin: dump
+    source: https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x64.tgz
+    organize:
+      metanorma-linux-x64: bin/metanorma
     stage-packages:
       - git
       - libbz2-1.0
@@ -42,6 +41,7 @@ parts:
       - libsystemd0
       - libtinfo5
       - libudev1
+      - libmspack-dev
   plantuml:
     plugin: maven
     maven-version: '3.5.2'

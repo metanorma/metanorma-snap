@@ -33,6 +33,7 @@ parts:
     source: ./
     organize:
       metanorma-linux-x64: bin/metanorma
+    # can be removed once https://github.com/metanorma/packed-mn/pull/67 released
     override-build: |
       curl -SL https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x64.tgz | tar -xz
       strip metanorma-linux-x64

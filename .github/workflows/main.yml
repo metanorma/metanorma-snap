@@ -16,7 +16,7 @@ jobs:
       - name: Snapcraft setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y squashfs-tools python3
+          sudo apt-get install -y squashfs-tools python3 curl
           snapcraft --version
       - name: Build snap
         run: |

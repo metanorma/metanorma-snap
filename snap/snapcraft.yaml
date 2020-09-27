@@ -10,9 +10,12 @@ description: |
 grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: devmode # use 'strict' once you have the right plugs and slots
 
+architectures:
+  - build-on: amd64
+
 apps:
   metanorma:
-    command: $SNAP/bin/metanorma
+    command: bin/metanorma
     environment:
       PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
       DEBUG: "*:*"
@@ -27,9 +30,13 @@ apps:
 parts:
   packed-mn:
     plugin: dump
-    source: https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x64.tgz
+    source: ./
     organize:
       metanorma-linux-x64: bin/metanorma
+    override-build: |
+      curl -SL https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x64.tgz | tar -xz
+      strip metanorma-linux-x64
+      snapcraftctl build
     stage-packages:
       - git
       - zlib1g

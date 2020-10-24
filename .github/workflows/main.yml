@@ -3,6 +3,7 @@ name: main
 on:
   push:
     branches: [ master ]
+    tags: [ v* ]
   pull_request:
 
 jobs:
@@ -54,3 +55,23 @@ jobs:
       - name: Test snap
         run: |
           for adoc in ./tests/*.adoc; do metanorma compile $adoc; done
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: Release snap
+    needs: test
+    runs-on: ubuntu-latest
+    container:
+      image: snapcore/snapcraft:stable
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/download-artifact@v1
+        with:
+          name: metanorma-snap
+          path: ./snap
+      - name: Push to snapcraft.io
+        env: 
+          SNAPCRAFT_TOKEN: ${{ secrets.snapcraft_token }}
+        run: |
+          echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
+          snapcraft login --with .snapcraft_token
+          snapcraft push --release=candidate snap/metanorma_fixed.snap

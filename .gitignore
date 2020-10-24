@@ -2,3 +2,4 @@
 *.snap
 .tmp.xml
 snap_token
+/parts

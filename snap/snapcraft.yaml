@@ -1,6 +1,6 @@
 name: metanorma
 base: core
-version: '1.4.5pre'
+version: '1.4.5'
 summary: Metanorma documentation generator
 description: |
   Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 

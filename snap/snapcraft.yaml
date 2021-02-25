@@ -19,6 +19,7 @@ apps:
     environment:
       PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
       DEBUG: "*:*"
+      GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
     plugs:
       - browser-support
       - network
@@ -34,7 +35,7 @@ parts:
     organize:
       metanorma-linux-x64: bin/metanorma
     stage-packages:
-      - git
+      - git-core
       - zlib1g
       - libgcrypt20
       - liblzma5
@@ -62,9 +63,10 @@ parts:
       - zlib1g
       - libdb5.3
       - libncursesw5
-    # override-stage: |
-    #   snapcraftctl stage
-    #   chmod 0755 ./local/share/fonts
+    override-pull: | # https://forum.snapcraft.io/t/core-snaps-with-python-plugin-using-incompatible-pip-version-21-0/22369/2
+      apt-get install -y python3-pip
+      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
+      snapcraftctl pull
   idnits:
     plugin: dump
     source: https://tools.ietf.org/tools/idnits/idnits-2.16.02.tgz

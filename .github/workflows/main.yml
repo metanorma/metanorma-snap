@@ -55,7 +55,7 @@ jobs:
           sudo snap install snap/metanorma_fixed.snap --devmode
       - name: Test snap
         run: |
-          for adoc in ./tests/*.adoc; do metanorma compile $adoc; done
+          for adoc in ./tests/*.adoc; do metanorma compile $adoc --agree-to-terms; done
 
   release-edge:
     if: github.ref == 'refs/heads/master'

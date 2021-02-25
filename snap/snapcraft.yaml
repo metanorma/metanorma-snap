@@ -19,6 +19,7 @@ apps:
     environment:
       PATH: $SNAP/idnits:$SNAP/local/bin:$PATH
       DEBUG: "*:*"
+      GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
     plugs:
       - browser-support
       - network
@@ -34,7 +35,7 @@ parts:
     organize:
       metanorma-linux-x64: bin/metanorma
     stage-packages:
-      - git
+      - git-core
       - zlib1g
       - libgcrypt20
       - liblzma5

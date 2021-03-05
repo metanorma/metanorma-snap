@@ -13,20 +13,22 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+
       - name: Snapcraft setup
         run: |
           sudo apt-get update
           sudo apt-get install -y squashfs-tools python3 curl
           snapcraft --version
-      - name: Build snap
-        run: |
-          snapcraft snap --debug --output metanorma.snap
+
+      - run: snapcraft snap --debug --output metanorma.snap
+
       - name: Fix snap
-        run: |
+        run: | # https://forum.snapcraft.io/t/automated-reviews-and-snapcraft-2-38/4982/2
           unsquashfs metanorma.snap
           sudo chmod -R g-s ./squashfs-root
           mksquashfs ./squashfs-root ./metanorma_fixed.snap -noappend -comp xz -all-root -no-xattrs -no-fragments
+
       - uses: actions/upload-artifact@v1
         with:
           name: metanorma-snap
@@ -37,25 +39,23 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Snapcraft setup
-        run: |
-          sudo apt update
-          sudo apt install -y snapd
+      - uses: actions/checkout@v2
+
+      - run: sudo apt update && sudo apt install -y snapd
+
       - uses: actions/download-artifact@v1
         with:
           name: metanorma-snap
           path: ./snap
+
       - uses: kolpav/purge-artifacts-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           expire-in: 0
-      - name: Install snap
-        run: |
-          sudo snap install snap/metanorma_fixed.snap --devmode
-      - name: Test snap
-        run: |
-          for adoc in ./tests/*.adoc; do metanorma compile $adoc --agree-to-terms; done
+
+      - run: sudo snap install snap/metanorma_fixed.snap --devmode
+
+      - run: for adoc in ./tests/*.adoc; do metanorma compile $adoc --agree-to-terms; done
 
   release-edge:
     if: github.ref == 'refs/heads/master'

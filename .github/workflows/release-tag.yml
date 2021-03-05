@@ -3,30 +3,44 @@ name: release-tag
 on:
   repository_dispatch:
     types: [ metanorma/packed-mn ]
+  workflow_dispatch:
+    inputs:
+      next_version:
+        description: |
+          Next release version.
+        required: true
 
 jobs:
   push-tag:
     runs-on: ubuntu-18.04
-    if: startsWith(github.event.client_payload.ref, 'refs/tags/v')
+    if: startsWith(github.event.client_payload.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
     - uses: actions/checkout@v1
+
     - name: Add writable remote
       run: |
         git config --global user.name "metanorma-ci"
         git config --global user.email "metanorma-ci@users.noreply.github.com"
         git remote add github "https://metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/$GITHUB_REPOSITORY.git"
         git pull github ${GITHUB_REF} --ff-only
-    - name: Parse metanorma-cli version
+
+    - if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: echo SNAP_VERSION=${{ github.event.inputs.next_version }} >> ${GITHUB_ENV}
+
+    - if: ${{ github.event_name == 'repository_dispatch' }}
+      run: echo SNAP_VERSION=${METANORMA_CLI_TAG#*/v} >> ${GITHUB_ENV}
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref }}
-      run: |
-        echo METANORMA_CLI_VERSION=${METANORMA_CLI_TAG#*/v} >> ${GITHUB_ENV}
-    - name: Update Formula
-      run: |
-        ./snap-set-version.sh ${METANORMA_CLI_VERSION}
+
+    - run: |
+        sudo apt update && sudo apt install -y snapd
+        sudo snap install yq
+
+    - run: ./snap-set-version.sh ${SNAP_VERSION}
+
     - name: Push commit and tag
       run: |
         git add snap/snapcraft.yaml
-        git commit -m "Bump version to ${METANORMA_CLI_VERSION}"
-        git tag v${METANORMA_CLI_VERSION}
+        git commit -m "Bump version to ${SNAP_VERSION}"
+        git tag v${SNAP_VERSION}
         git push github HEAD:${GITHUB_REF} --tags

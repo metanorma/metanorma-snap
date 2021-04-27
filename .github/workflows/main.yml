@@ -9,11 +9,14 @@ on:
 jobs:
   build:
     name: Build metanorma snap
-    runs-on: ubuntu-latest
-    container:
-      image: snapcore/snapcraft:stable
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install Snapcraft with LXD
+        uses: samuelmeuli/action-snapcraft@v1
+        with:
+          use_lxd: true
 
       - name: Snapcraft setup
         run: |
@@ -21,7 +24,8 @@ jobs:
           sudo apt-get install -y squashfs-tools python3 curl
           snapcraft --version
 
-      - run: snapcraft snap --debug --output metanorma.snap
+      - name: Build snap
+        run: sg lxd -c 'snapcraft snap --debug --output metanorma.snap --use-lxd'
 
       - name: Fix snap
         run: | # https://forum.snapcraft.io/t/automated-reviews-and-snapcraft-2-38/4982/2
@@ -37,7 +41,11 @@ jobs:
   test:
     name: Test metanorma snap
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-18.04, ubuntu-20.04 ]
     steps:
       - uses: actions/checkout@v2
 

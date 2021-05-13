@@ -64,6 +64,9 @@ jobs:
       - run: sudo snap install snap/metanorma_fixed.snap --devmode
 
       - run: for adoc in ./tests/*.adoc; do metanorma compile $adoc --agree-to-terms; done
+        continue-on-error: true
+
+      - run: for xml in ./tests/*.xml; do echo $xml; cat $xml; done
 
   release-edge:
     if: github.ref == 'refs/heads/master'

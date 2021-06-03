@@ -8,8 +8,20 @@ The released Metanorma snap package is located at Snapcraft: https://snapcraft.i
 
 == Building the package
 
-* Run `snapcraft snap` in the root directory of this repo
+On Linux:
 
+[source,sh]
+----
+# Enter the root directory of this repo
+snapcraft snap
+----
+
+Via Docker:
+
+[source,sh]
+----
+docker run -v $(pwd):/build -w /build -it snapcore/snapcraft:stable snapcraft snap
+----
 
 == Testing the package
 
@@ -36,3 +48,15 @@ sudo snap remove metanorma
 After executing the uninstall ensure that the `metanorma` executable is no longer found.
 
 You can also try running `metanorma help` from the command-line to see if it is still installed.
+
+== Generating the snapcraft token
+
+You will be prompted to enter your email and password.
+
+[source,sh]
+----
+$ docker run -it snapcore/snapcraft:stable snapcraft export-login -
+Enter your Ubuntu One e-mail address and password.
+If you do not have an Ubuntu One account, you can create one at https://snapcraft.io/account
+Email:
+----

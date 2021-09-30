@@ -47,7 +47,7 @@ parts:
     maven-options: [-DskipTests=true, -Dmaven.javadoc.skip=true]
     source: https://github.com/plantuml/plantuml.git
     source-tag: v1.2019.7
-    stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g]
+    stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g, graphviz]
   xml2rfc:
     plugin: python
     python-version: python3

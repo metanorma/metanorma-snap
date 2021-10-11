@@ -122,7 +122,7 @@ jobs:
           path: ./snap
       - name: Push to snapcraft.io
         env:
-          SNAPCRAFT_TOKEN: ${{ secrets.snapcraft_token }}
+          SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         run: |
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token

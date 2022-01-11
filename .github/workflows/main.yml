@@ -13,6 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - run: |
+          snap_version=$(yq e '.version' snap/snapcraft.yaml)
+          echo "Snap version: ${snap_version}"
+
       - name: Install Snapcraft with LXD
         uses: samuelmeuli/action-snapcraft@v1
         with:
@@ -103,9 +107,10 @@ jobs:
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         run: |
+          snap_version=$(yq e '.version' snap/snapcraft.yaml)
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
-          snapcraft push --release=candidate snap/metanorma_fixed.snap
+          snapcraft push --release=candidate,${snap_version}/candidate snap/metanorma_fixed.snap
 
   release-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
@@ -124,6 +129,8 @@ jobs:
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         run: |
+          snap_version=$(yq e '.version' snap/snapcraft.yaml)
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
           snapcraft push --release=stable snap/metanorma_fixed.snap
+          snapcraft push --release=stable,${snap_version}/stable snap/metanorma_fixed.snap

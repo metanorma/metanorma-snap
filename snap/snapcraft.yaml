@@ -26,9 +26,9 @@ apps:
 parts:
   packed-mn:
     plugin: dump
-    source: https://github.com/metanorma/packed-mn/releases/download/v1.5.4/metanorma-linux-x64.tgz
+    source: https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x86_64.tgz
     organize:
-      metanorma-linux-x64: bin/metanorma
+      metanorma-linux-x86_64: bin/metanorma
     stage-packages:
       - git-core
       - zlib1g

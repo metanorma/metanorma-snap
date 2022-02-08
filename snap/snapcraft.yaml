@@ -40,6 +40,7 @@ parts:
       - libtinfo5
       - libudev1
       - libmspack-dev
+      - libstdc++6
   plantuml:
     plugin: maven
     maven-version: '3.5.2'

@@ -3,7 +3,7 @@
 NEW_VERSION=${1:-1.2.11}
 OLD_VERSION=$(yq e '.version' snap/snapcraft.yaml)
 PACKED_MN_ROOT_URL=https://github.com/metanorma/packed-mn/releases/download
-PACKED_MN_FILE=metanorma-linux-x64.tgz
+PACKED_MN_FILE=metanorma-linux-x86_64.tgz
 
 if curl --output /dev/null --silent --head --fail "${PACKED_MN_ROOT_URL}/v${NEW_VERSION}/${PACKED_MN_FILE}"; then
   NEW_PACKED_MN_URL="${PACKED_MN_ROOT_URL}/v\$SNAPCRAFT_PROJECT_VERSION/${PACKED_MN_FILE}"

@@ -16,6 +16,7 @@ apps:
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
       XDG_DATA_HOME: $SNAP/usr/share # NPE in sun.awt.FontConfiguration.getVersion, https://bugs.launchpad.net/ubuntu/+source/snapd/+bug/1576303
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/:$LD_LIBRARY_PATH
     plugs:
       - browser-support
       - network

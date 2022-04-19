@@ -67,6 +67,13 @@ jobs:
 
       - run: sudo snap install snap/metanorma_fixed.snap --devmode
 
+      - name: glib versions
+        run: |
+          echo "Snap's libstdc++ :"
+          strings /snap/core18/current/usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX_
+          echo "System's libstdc++ :"
+          strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX_
+
       - run: for adoc in ./tests/*.adoc; do metanorma compile $adoc --agree-to-terms; done
 
   release-edge:

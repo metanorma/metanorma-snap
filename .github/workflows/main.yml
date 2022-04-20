@@ -22,11 +22,19 @@ jobs:
         with:
           use_lxd: true
 
+      - run: |
+          echo "System's libstdc++ :"
+          strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX_
+
       - name: Snapcraft setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y squashfs-tools python3 curl
+          sudo apt-get install -y squashfs-tools python3 curl libstdc++6
           snapcraft --version
+
+      - run: |
+          echo "System's libstdc++ :"
+          strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX_
 
       - name: Build snap
         run: sg lxd -c 'snapcraft snap --debug --output metanorma.snap --use-lxd'

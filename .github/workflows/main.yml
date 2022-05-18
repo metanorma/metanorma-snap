@@ -103,14 +103,19 @@ jobs:
         with:
           name: metanorma-snap
           path: ./snap
+      - id: snap_version
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.version' snap/snapcraft.yaml
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+          SNAP_VERSION: ${{ steps.snap_version.outputs.result }}
         run: |
           snap_version=$(yq e '.version' snap/snapcraft.yaml)
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
-          snapcraft push --release=candidate,${snap_version}/candidate snap/metanorma_fixed.snap
+          snapcraft push --release=candidate,${SNAP_VERSION}/candidate snap/metanorma_fixed.snap
 
   release-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
@@ -125,13 +130,16 @@ jobs:
         with:
           name: metanorma-snap
           path: ./snap
-      - run: sudo snap install yq
+      - id: snap_version
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.version' snap/snapcraft.yaml
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+          SNAP_VERSION: ${{ steps.snap_version.outputs.result }}
         run: |
-          snap_version=$(yq e '.version' snap/snapcraft.yaml)
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
           snapcraft push --release=stable snap/metanorma_fixed.snap
-          snapcraft push --release=stable,${snap_version}/stable snap/metanorma_fixed.snap
+          snapcraft push --release=stable,${SNAP_VERSION}/stable snap/metanorma_fixed.snap

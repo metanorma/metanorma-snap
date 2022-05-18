@@ -125,6 +125,7 @@ jobs:
         with:
           name: metanorma-snap
           path: ./snap
+      - run: sudo snap install yq
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}

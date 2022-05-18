@@ -1,4 +1,5 @@
 image:https://github.com/metanorma/metanorma-snap/workflows/main/badge.svg["Build Status", link="https://github.com/metanorma/metanorma-snap/actions?query=workflow%3Amain"]
+image:https://snapcraft.io/metanorma/badge.svg["Snap Version", link="https://snapcraft.io/metanorma"]
 
 = metanorma-snap: Metanorma Snap Package
 

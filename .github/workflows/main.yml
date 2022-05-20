@@ -10,6 +10,9 @@ jobs:
   build:
     name: Build metanorma snap
     runs-on: ubuntu-18.04
+    outputs:
+      snap_version: ${{ steps.snap_version.outputs.result }}
+      track_version: ${{ steps.track_version.outputs.result }}
     steps:
       - uses: actions/checkout@v2
 
@@ -37,6 +40,21 @@ jobs:
           sudo chmod -R g-s ./squashfs-root
           mksquashfs ./squashfs-root ./metanorma_fixed.snap -noappend -comp xz -all-root -no-xattrs -no-fragments
 
+      - id: snap_version
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.version' snap/snapcraft.yaml
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+
+      - id: track_version
+        run: |
+          curl -LO --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/main/gemver-to-semver.rb && chmod +x gemver-to-semver.rb
+          track_version=$(./gemver-to-semver.rb -d -k 3 ${{ steps.snap_version.outputs.result }})
+          echo "::set-output name=result::${track_version}"
+
       - uses: actions/upload-artifact@v1
         with:
           name: metanorma-snap
@@ -46,13 +64,38 @@ jobs:
     name: Test metanorma snap
     needs: build
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.flavor.experimental }}
     strategy:
+      max-parallel: 5
       fail-fast: false
       matrix:
         os: [ ubuntu-18.04, ubuntu-20.04 ]
+        flavor:
+        - id: iso
+          experimental: false
+        - id: cc
+          experimental: false
+        - id: iec
+          experimental: false
+        - id: ogc
+          experimental: false
+        - id: un
+          experimental: false
+        - id: iho
+          experimental: false
+        - id: ietf
+          experimental: false
+        - id: bipm
+          experimental: false
+        - id: itu
+          experimental: false
+        - id: csa
+          experimental: false
+        - id: m3aawg
+          experimental: true
+        - id: jcgm
+          experimental: true
     steps:
-      - uses: actions/checkout@v2
-
       - run: sudo apt update && sudo apt install -y snapd
 
       - uses: actions/download-artifact@v1
@@ -67,12 +110,22 @@ jobs:
 
       - run: sudo snap install snap/metanorma_fixed.snap --devmode
 
-      - run: for adoc in ./tests/*.adoc; do metanorma compile $adoc --agree-to-terms; done
+      - name: Fetch samples (${{ matrix.flavor.id }})
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          fetch-depth: 1
+
+      - uses: actions-mn/cli/site-gen@main
+        with:
+          agree-to-terms: true
 
   release-edge:
     if: github.ref == 'refs/heads/master'
     name: Release edge snap
-    needs: test
+    needs: [build, test]
     runs-on: ubuntu-latest
     container:
       image: snapcore/snapcraft:stable
@@ -93,7 +146,7 @@ jobs:
   release-candidate:
     if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, 'pre')
     name: Release stable snap
-    needs: test
+    needs: [build, test]
     runs-on: ubuntu-latest
     container:
       image: snapcore/snapcraft:stable
@@ -103,24 +156,19 @@ jobs:
         with:
           name: metanorma-snap
           path: ./snap
-      - id: snap_version
-        uses: mikefarah/yq@master
-        with:
-          cmd: yq '.version' snap/snapcraft.yaml
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-          SNAP_VERSION: ${{ steps.snap_version.outputs.result }}
+          TRACK_VERSION: ${{ needs.build.outputs.track_version }}
         run: |
-          snap_version=$(yq e '.version' snap/snapcraft.yaml)
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
-          snapcraft push --release=candidate,${SNAP_VERSION}/candidate snap/metanorma_fixed.snap
+          snapcraft push --release=candidate,${TRACK_VERSION}/candidate snap/metanorma_fixed.snap
 
   release-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
     name: Release stable snap
-    needs: test
+    needs: [build, test]
     runs-on: ubuntu-latest
     container:
       image: snapcore/snapcraft:stable
@@ -130,16 +178,11 @@ jobs:
         with:
           name: metanorma-snap
           path: ./snap
-      - id: snap_version
-        uses: mikefarah/yq@master
-        with:
-          cmd: yq '.version' snap/snapcraft.yaml
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-          SNAP_VERSION: ${{ steps.snap_version.outputs.result }}
+          TRACK_VERSION: ${{ needs.build.outputs.track_version }}
         run: |
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
-          snapcraft push --release=stable snap/metanorma_fixed.snap
-          snapcraft push --release=stable,${SNAP_VERSION}/stable snap/metanorma_fixed.snap
+          snapcraft push --release=stable,${TRACK_VERSION}/stable snap/metanorma_fixed.snap

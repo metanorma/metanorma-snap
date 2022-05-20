@@ -14,7 +14,7 @@ jobs:
       snap_version: ${{ steps.snap_version.outputs.result }}
       track_version: ${{ steps.track_version.outputs.result }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: |
           snap_version=$(yq e '.version' snap/snapcraft.yaml)
@@ -55,10 +55,11 @@ jobs:
           track_version=$(./gemver-to-semver.rb -d -k 3 ${{ steps.snap_version.outputs.result }})
           echo "::set-output name=result::${track_version}"
 
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         with:
           name: metanorma-snap
           path: metanorma_fixed.snap
+          retention-days: 5
 
   test:
     name: Test metanorma snap
@@ -98,15 +99,10 @@ jobs:
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v3
         with:
           name: metanorma-snap
           path: ./snap
-
-      - uses: kolpav/purge-artifacts-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          expire-in: 0
 
       - run: sudo snap install snap/metanorma_fixed.snap --devmode
 
@@ -130,8 +126,8 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v1
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: metanorma-snap
           path: ./snap
@@ -151,8 +147,8 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v1
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: metanorma-snap
           path: ./snap
@@ -173,8 +169,8 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v1
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: metanorma-snap
           path: ./snap

@@ -49,12 +49,6 @@ jobs:
         with:
           ruby-version: '3.1'
 
-      - id: track_version
-        run: |
-          curl -LO --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/main/gemver-to-semver.rb && chmod +x gemver-to-semver.rb
-          track_version=$(./gemver-to-semver.rb -d -k 3 ${{ steps.snap_version.outputs.result }})
-          echo "::set-output name=result::${track_version}"
-
       - uses: actions/upload-artifact@v3
         with:
           name: metanorma-snap
@@ -155,11 +149,10 @@ jobs:
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-          TRACK_VERSION: ${{ needs.build.outputs.track_version }}
         run: |
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
-          snapcraft push --release=candidate,${TRACK_VERSION}/candidate snap/metanorma_fixed.snap
+          snapcraft push --release=candidate snap/metanorma_fixed.snap
 
   release-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
@@ -177,8 +170,7 @@ jobs:
       - name: Push to snapcraft.io
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-          TRACK_VERSION: ${{ needs.build.outputs.track_version }}
         run: |
           echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
           snapcraft login --with .snapcraft_token
-          snapcraft push --release=stable,${TRACK_VERSION}/stable snap/metanorma_fixed.snap
+          snapcraft push --release=stable snap/metanorma_fixed.snap

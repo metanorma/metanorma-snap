@@ -1,6 +1,6 @@
 name: metanorma
 base: core18
-version: '1.5.18'
+version: '1.5.19.pre'
 summary: Metanorma documentation generator
 description: "Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: \n- Build tools for authoring standards and formatting them in accordance with your organization’s practices\n- Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.\n"
 grade: stable
@@ -26,7 +26,7 @@ apps:
 parts:
   packed-mn:
     plugin: dump
-    source: https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x86_64.tgz
+    source: https://github.com/metanorma/packed-mn/releases/download/v1.5.18/metanorma-linux-x86_64.tgz
     organize:
       metanorma-linux-x86_64: bin/metanorma
     stage-packages:

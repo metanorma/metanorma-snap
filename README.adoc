@@ -50,7 +50,15 @@ After executing the uninstall ensure that the `metanorma` executable is no longe
 
 You can also try running `metanorma help` from the command-line to see if it is still installed.
 
+
 == Generating the snapcraft token
+
+Run the following Docker command:
+
+[source,sh]
+----
+$ docker run -it snapcore/snapcraft:stable snapcraft export-login -
+----
 
 You will be prompted to enter your email and password.
 
@@ -59,5 +67,28 @@ You will be prompted to enter your email and password.
 $ docker run -it snapcore/snapcraft:stable snapcraft export-login -
 Enter your Ubuntu One e-mail address and password.
 If you do not have an Ubuntu One account, you can create one at https://snapcraft.io/account
-Email:
+Email: metanorma@ribose.com
+Password:
+
+We strongly recommend enabling multi-factor authentication: https://help.ubuntu.com/community/SSO/FAQs/2FA
+
+Exported login starts on next line:
+AABBB...==
+
+Login successfully exported and printed above. This can now be used with
+
+    echo "<login>" | snapcraft login --with -
+
+to log in to this account with no password and have these
+capabilities:
+
+snaps:       No restriction
+channels:    No restriction
+permissions: ['package_access', 'package_manage', 'package_push', 'package_register', 'package_release', 'package_update']
+expires:     2023-10-26T01:01:02.020303
+
+This exported login is not encrypted. Do not commit it to version control!
 ----
+
+NOTE: In this repository, the exported login `AABBB...==` value is placed in
+GitHub Actions' secret named `METANORMA_SNAPCRAFT_TOKEN`.

@@ -41,11 +41,19 @@ parts:
       - libudev1
       - libmspack-dev
   plantuml:
-    plugin: dump
-    source: https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar
-    organize:
-      plantuml-1.2022.12.jar: jar/plantuml-1.2022.12.jar
-    stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g, graphviz]
+    plugin: nil
+    override-build: |
+      mkdir -p $SNAP/jar
+      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar -O $SNAP/jar/plantuml-1.2022.12.jar
+    build-packages:
+      - wget
+    stage-packages:
+      - libgcrypt20
+      - liblzma5
+      - libselinux1
+      - libsystemd0
+      - zlib1g
+      - graphviz
   xml2rfc:
     plugin: python
     python-version: python3

@@ -11,7 +11,7 @@ apps:
   metanorma:
     command: bin/metanorma
     environment:
-      PATH: $SNAP/local/bin:$PATH
+      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-8-openjdk-amd64/jre/bin:$PATH
       DEBUG: "*:*"
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
@@ -22,7 +22,7 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: java -jar $SNAP/jar/plantuml-1.2022.12.jar
+    command: usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
 parts:
   packed-mn:
     plugin: dump
@@ -43,8 +43,8 @@ parts:
   plantuml:
     plugin: nil
     override-build: |
-      mkdir -p $SNAP/jar
-      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar -O $SNAP/jar/plantuml-1.2022.12.jar
+      mkdir $SNAPCRAFT_PART_INSTALL/jar
+      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar -O $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2022.12.jar
     build-packages:
       - wget
     stage-packages:
@@ -54,6 +54,7 @@ parts:
       - libsystemd0
       - zlib1g
       - graphviz
+      - openjdk-8-jre
   xml2rfc:
     plugin: python
     python-packages: [idnits, xml2rfc]

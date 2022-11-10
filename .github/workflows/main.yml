@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build metanorma snap
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       snap_version: ${{ steps.snap_version.outputs.result }}
       track_version: ${{ steps.track_version.outputs.result }}
@@ -64,7 +64,7 @@ jobs:
       max-parallel: 5
       fail-fast: false
       matrix:
-        os: [ ubuntu-18.04, ubuntu-20.04 ]
+        os: [ ubuntu-20.04 ]
         flavor:
         - id: iso
           experimental: false

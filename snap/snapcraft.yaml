@@ -22,7 +22,7 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar
+    command: java -jar $SNAP/jar/plantuml-1.2022.12.jar
 parts:
   packed-mn:
     plugin: dump
@@ -41,12 +41,10 @@ parts:
       - libudev1
       - libmspack-dev
   plantuml:
-    plugin: maven
-    maven-version: '3.5.2'
-    maven-openjdk-version: '8'
-    maven-options: [-DskipTests=true, -Dmaven.javadoc.skip=true]
-    source: https://github.com/plantuml/plantuml.git
-    source-tag: v1.2019.7
+    plugin: dump
+    source: https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar
+    organize:
+      plantuml-1.2022.12.jar: jar/plantuml-1.2022.12.jar
     stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g, graphviz]
   xml2rfc:
     plugin: python

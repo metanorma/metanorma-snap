@@ -56,7 +56,6 @@ parts:
       - graphviz
   xml2rfc:
     plugin: python
-    python-version: python3
     python-packages: [idnits, xml2rfc]
     stage-packages:
       - libbz2-1.0
@@ -64,7 +63,3 @@ parts:
       - zlib1g
       - libdb5.3
       - libncursesw5
-    override-pull: | # https://forum.snapcraft.io/t/core-snaps-with-python-plugin-using-incompatible-pip-version-21-0/22369/2
-      apt-get install -y python3-pip
-      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
-      snapcraftctl pull

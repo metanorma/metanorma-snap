@@ -1,5 +1,5 @@
 name: metanorma
-base: core18
+base: core20
 version: '1.6.6'
 summary: Metanorma documentation generator
 description: "Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: \n- Build tools for authoring standards and formatting them in accordance with your organization’s practices\n- Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.\n"
@@ -11,7 +11,7 @@ apps:
   metanorma:
     command: bin/metanorma
     environment:
-      PATH: $SNAP/local/bin:$PATH
+      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-8-openjdk-amd64/jre/bin:$PATH
       DEBUG: "*:*"
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
@@ -22,7 +22,7 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: java -jar $SNAP/jar/plantuml-1.2019.7-SNAPSHOT.jar
+    command: usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
 parts:
   packed-mn:
     plugin: dump
@@ -41,16 +41,22 @@ parts:
       - libudev1
       - libmspack-dev
   plantuml:
-    plugin: maven
-    maven-version: '3.5.2'
-    maven-openjdk-version: '8'
-    maven-options: [-DskipTests=true, -Dmaven.javadoc.skip=true]
-    source: https://github.com/plantuml/plantuml.git
-    source-tag: v1.2019.7
-    stage-packages: [libgcrypt20, liblzma5, libselinux1, libsystemd0, zlib1g, graphviz]
+    plugin: nil
+    override-build: |
+      mkdir $SNAPCRAFT_PART_INSTALL/jar
+      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar -O $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2022.12.jar
+    build-packages:
+      - wget
+    stage-packages:
+      - libgcrypt20
+      - liblzma5
+      - libselinux1
+      - libsystemd0
+      - zlib1g
+      - graphviz
+      - openjdk-8-jre
   xml2rfc:
     plugin: python
-    python-version: python3
     python-packages: [idnits, xml2rfc]
     stage-packages:
       - libbz2-1.0
@@ -58,7 +64,3 @@ parts:
       - zlib1g
       - libdb5.3
       - libncursesw5
-    override-pull: | # https://forum.snapcraft.io/t/core-snaps-with-python-plugin-using-incompatible-pip-version-21-0/22369/2
-      apt-get install -y python3-pip
-      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
-      snapcraftctl pull

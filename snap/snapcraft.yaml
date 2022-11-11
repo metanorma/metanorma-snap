@@ -47,6 +47,10 @@ parts:
       wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar -O $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2022.12.jar
     build-packages:
       - wget
+      # https://askubuntu.com/questions/1054854/snap-package-error-uploading
+      - ca-certificates
+      - ca-certificates-java
+      - openjdk-8-jre-headless
     stage-packages:
       - libgcrypt20
       - liblzma5
@@ -54,7 +58,7 @@ parts:
       - libsystemd0
       - zlib1g
       - graphviz
-      - openjdk-8-jre
+      - openjdk-8-jre-headless
   xml2rfc:
     plugin: python
     python-packages: [idnits, xml2rfc]

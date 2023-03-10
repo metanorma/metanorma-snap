@@ -7,8 +7,16 @@ on:
   pull_request:
 
 jobs:
+  build-matrix:
+    name: Matrix
+    uses: metanorma/ci/.github/workflows/build-sample-matrix.yml@main
+    with:
+      smoke: false
+      flavors-only: true
+      public-only: true
+
   build:
-    name: Build metanorma snap
+    name: Build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -24,41 +32,11 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
           retention-days: 5
 
-  test:
-    name: Test metanorma snap
-    needs: build
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.flavor.experimental }}
-    strategy:
-      max-parallel: 5
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-20.04 ]
-        flavor:
-        - id: iso
-          experimental: false
-        - id: cc
-          experimental: false
-        - id: iec
-          experimental: false
-        - id: ogc
-          experimental: false
-        - id: un
-          experimental: false
-        - id: iho
-          experimental: false
-        - id: ietf
-          experimental: false
-        - id: bipm
-          experimental: false
-        - id: itu
-          experimental: false
-        - id: csa
-          experimental: false
-        - id: m3aawg
-          experimental: true
-        - id: jcgm
-          experimental: true
+  info:
+    name: Info
+    needs: [build]
+    runs-on: ubuntu-20.04
+
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
@@ -68,6 +46,37 @@ jobs:
           path: ./snap
 
       - run: sudo snap install snap/*.snap --devmode
+
+      - run: snap interfaces metanorma
+
+      - run: snap connections metanorma
+
+  test:
+    name: Test
+    needs: [build, build-matrix]
+    runs-on: ubuntu-20.04
+
+    concurrency:
+      group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.os }}-${{ matrix.ruby.version }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      cancel-in-progress: true
+
+    continue-on-error: ${{ matrix.flavor.experimental }}
+    strategy:
+      max-parallel: 5
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
+
+    steps:
+      - run: sudo apt update && sudo apt install -y snapd
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: metanorma-snap
+          path: ./snap
+
+      - run: |
+          sudo snap install snap/*.snap --devmode
+          sudo snap connect metanorma:home :home
 
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v3
@@ -83,7 +92,7 @@ jobs:
 
   release-edge:
     if: github.ref == 'refs/heads/master'
-    name: Release edge snap
+    name: Release edge
     needs: [build, test]
     runs-on: ubuntu-latest
     container:
@@ -104,7 +113,7 @@ jobs:
 
   release-candidate:
     if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, 'pre')
-    name: Release stable snap
+    name: Release candidate
     needs: [build, test]
     runs-on: ubuntu-latest
     container:
@@ -125,7 +134,7 @@ jobs:
 
   release-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
-    name: Release stable snap
+    name: Release stable
     needs: [build, test]
     runs-on: ubuntu-latest
     container:

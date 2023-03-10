@@ -40,6 +40,7 @@ parts:
       - libtinfo5
       - libudev1
       - libmspack-dev
+      - openjdk-8-jre-headless
   plantuml:
     plugin: nil
     override-build: |

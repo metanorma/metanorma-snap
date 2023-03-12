@@ -91,7 +91,7 @@ jobs:
           agree-to-terms: true
 
   release-edge:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     name: Release edge
     needs: [build, test]
     runs-on: ubuntu-latest

@@ -7,11 +7,15 @@ grade: stable
 confinement: strict
 architectures:
   - build-on: amd64
+    build-for: amd64
+  - build-on: [amd64, arm64]
+    build-for: arm64
+
 apps:
   metanorma:
     command: bin/metanorma
     environment:
-      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
+      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-17-openjdk-$SNAPCRAFT_BUILD_FOR/bin:$PATH
       DEBUG: "*:*"
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
@@ -22,11 +26,17 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: usr/lib/jvm/java-17-openjdk-amd64/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
+    command: usr/lib/jvm/java-17-openjdk-$SNAPCRAFT_BUILD_FOR/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
 parts:
   packed-mn:
-    plugin: dump
-    source: https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x86_64.tgz
+    plugin: nil
+    override-build: |
+      MN_ARCH=x86_64
+      if [ "$SNAPCRAFT_BUILD_FOR" = "" ]; then
+        # MN_ARCH=aarach64
+      fi
+      wget --quiet https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-$MN_ARCH.tgz -O metanorma-linux.tgz
+      tar -xvfz metanorma-linux.tgz
     organize:
       metanorma-linux-x86_64: bin/metanorma
     stage-packages:

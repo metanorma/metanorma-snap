@@ -11,7 +11,7 @@ apps:
   metanorma:
     command: bin/metanorma
     environment:
-      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH
+      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
       DEBUG: "*:*"
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
@@ -22,7 +22,7 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: usr/lib/jvm/java-11-openjdk-amd64/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
+    command: usr/lib/jvm/java-17-openjdk-amd64/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
 parts:
   packed-mn:
     plugin: dump
@@ -50,7 +50,7 @@ parts:
       # https://askubuntu.com/questions/1054854/snap-package-error-uploading
       - ca-certificates
       - ca-certificates-java
-      - openjdk-11-jre-headless
+      - openjdk-17-jre-headless
     stage-packages:
       - libgcrypt20
       - liblzma5
@@ -58,7 +58,7 @@ parts:
       - libsystemd0
       - zlib1g
       - graphviz
-      - openjdk-11-jre-headless
+      - openjdk-17-jre-headless
   xml2rfc:
     plugin: python
     python-packages: [idnits, xml2rfc]

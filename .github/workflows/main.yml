@@ -76,7 +76,7 @@ jobs:
 
       - run: |
           sudo snap install snap/*.snap --devmode
-          sudo snap connect metanorma:home-dot-metanorma
+          sudo snap connect metanorma:home :home
 
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v3

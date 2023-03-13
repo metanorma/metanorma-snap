@@ -7,6 +7,11 @@ grade: stable
 confinement: strict
 architectures:
   - build-on: amd64
+plugs:
+  home-dot-metanorma:
+    interface: personal-files
+    write:
+    - $HOME/.metanorma
 apps:
   metanorma:
     command: bin/metanorma
@@ -17,6 +22,7 @@ apps:
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
       XDG_DATA_HOME: $SNAP/usr/share # NPE in sun.awt.FontConfiguration.getVersion, https://bugs.launchpad.net/ubuntu/+source/snapd/+bug/1576303
     plugs:
+      - home-dot-metanorma
       - browser-support
       - network
       - gsettings

@@ -19,14 +19,14 @@ jobs:
     name: Build
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@4
 
       - id: snapcraft
         uses: snapcore/action-build@v1
         with:
           path: snap
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: metanorma-snap
           path: ${{ steps.snapcraft.outputs.snap }}
@@ -40,7 +40,7 @@ jobs:
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
@@ -69,7 +69,7 @@ jobs:
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
@@ -98,8 +98,8 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
@@ -119,8 +119,8 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
@@ -140,8 +140,8 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap

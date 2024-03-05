@@ -79,7 +79,7 @@ jobs:
           sudo snap connect metanorma:home :home
 
       - name: Fetch samples (${{ matrix.flavor.id }})
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           repository: metanorma/mn-samples-${{ matrix.flavor.id }}

@@ -1,6 +1,6 @@
 name: metanorma
 base: core20
-version: '1.9.2'
+version: '1.9.3'
 summary: Metanorma documentation generator
 description: "Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: \n- Build tools for authoring standards and formatting them in accordance with your organization’s practices\n- Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.\n"
 grade: stable

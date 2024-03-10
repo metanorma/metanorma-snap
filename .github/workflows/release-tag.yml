@@ -35,6 +35,8 @@ jobs:
 
     - name: Push commit and tag
       run: |
+        git config --global user.name "metanorma-ci"
+        git config --global user.email "metanorma-ci@users.noreply.github.com"
         git add snap/snapcraft.yaml
         git commit -m "Bump version to ${SNAP_VERSION}"
         git tag v${SNAP_VERSION}

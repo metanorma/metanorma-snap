@@ -98,7 +98,6 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
@@ -119,7 +118,6 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
@@ -140,7 +138,6 @@ jobs:
     container:
       image: snapcore/snapcraft:stable
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap

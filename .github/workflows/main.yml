@@ -86,7 +86,7 @@ jobs:
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 
-      - uses: actions-mn/site-gen@v1
+      - uses: actions-mn/site-gen@v2
         with:
           agree-to-terms: true
 

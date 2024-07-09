@@ -1,0 +1,46 @@
+name: action-snapcraft-upload
+description: Makesure that snapcraft is installed and ready to run
+
+inputs:
+  token:
+    description: Snap token
+    required: true
+  snapfile:
+    description: Snap file to publish
+    required: true
+  channel:
+    description: Name of the distribution. Allowed: edge, beta, candidate, stable
+    default: edge
+
+runs:
+  using: "composite"
+  steps:
+  - name: Setup snapcraft
+    shell: bash
+    run: |
+      if ! [ -x "$(command -v /snap/bin/snapcraft)" ]; then
+        echo "snapcraft not found. Installing snapcraft..."
+
+        if ! [ -x "$(command -v snap)" ]; then
+          echo "snapd not found. Installing snapd..."
+          sudo apt update
+          sudo apt install -y snapd
+        fi
+
+        sudo snap install snapcraft --classic
+
+        if [ -x "$(command -v /snap/bin/snapcraft)" ]; then
+          echo "snapcraft successfully installed."
+        else
+          echo "Failed to install snapcraft."
+        fi
+      else
+        echo "snapcraft is already installed."
+      fi
+
+  - name: Run push
+    shell: bash
+    run: |
+      echo "${{ inputs.token }}" > .snapcraft_token
+      snapcraft login --with .snapcraft_token
+      snapcraft upload --release=${{ inputs.channel }} ${{ inputs.snapfile }}

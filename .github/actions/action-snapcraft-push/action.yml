@@ -9,7 +9,7 @@ inputs:
     description: Snap file to publish
     required: true
   channel:
-    description: Name of the distribution. Allowed: edge, beta, candidate, stable
+    description: 'Name of the distribution. Allowed: edge, beta, candidate, stable'
     default: edge
 
 runs:

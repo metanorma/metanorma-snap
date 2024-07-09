@@ -17,7 +17,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +26,7 @@ jobs:
         with:
           path: snap
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: metanorma-snap
           path: ${{ steps.snapcraft.outputs.snap }}
@@ -35,12 +35,12 @@ jobs:
   info:
     name: Info
     needs: [build]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
@@ -54,7 +54,7 @@ jobs:
   test:
     name: Test
     needs: [build, build-matrix]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     concurrency:
       group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
@@ -69,7 +69,7 @@ jobs:
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
@@ -94,58 +94,50 @@ jobs:
     if: github.ref == 'refs/heads/main'
     name: Release edge
     needs: [build, test]
-    runs-on: ubuntu-20.04
-    container:
-      image: snapcore/snapcraft:stable
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
       - name: Push to snapcraft.io
-        env:
-          SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-        run: |
-          echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
-          snapcraft login --with .snapcraft_token
-          snapcraft upload --release=edge snap/*.snap
+        uses: ./.github/actions/action-snapcraft-push
+        with:
+          snapfile: snap/*.snap
+          channel: edge
+          token: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
 
   release-candidate:
     if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, 'pre')
     name: Release candidate
     needs: [build, test]
-    runs-on: ubuntu-20.04
-    container:
-      image: snapcore/snapcraft:stable
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
       - name: Push to snapcraft.io
-        env:
-          SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-        run: |
-          echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
-          snapcraft login --with .snapcraft_token
-          snapcraft upload --release=candidate snap/*.snap
+        uses: ./.github/actions/action-snapcraft-push
+        with:
+          snapfile: snap/*.snap
+          channel: candidate
+          token: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+
 
   release-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
     name: Release stable
     needs: [build, test]
-    runs-on: ubuntu-20.04
-    container:
-      image: snapcore/snapcraft:stable
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap
           path: ./snap
       - name: Push to snapcraft.io
-        env:
-          SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-        run: |
-          echo "${SNAPCRAFT_TOKEN}" > .snapcraft_token
-          snapcraft login --with .snapcraft_token
-          snapcraft upload --release=stable snap/*.snap
+        uses: ./.github/actions/action-snapcraft-push
+        with:
+          snapfile: snap/*.snap
+          channel: stable
+          token: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}

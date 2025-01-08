@@ -40,7 +40,7 @@ runs:
 
   - name: Run push
     shell: bash
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ inputs.token }}
     run: |
-      echo "${{ inputs.token }}" > .snapcraft_token
-      snapcraft login --with .snapcraft_token
       snapcraft upload --release=${{ inputs.channel }} ${{ inputs.snapfile }}

@@ -1,11 +1,31 @@
+= Metanorma Snap Package
+
 image:https://github.com/metanorma/metanorma-snap/workflows/main/badge.svg["Build Status", link="https://github.com/metanorma/metanorma-snap/actions?query=workflow%3Amain"]
 image:https://snapcraft.io/metanorma/badge.svg["Snap Version", link="https://snapcraft.io/metanorma"]
 
-= metanorma-snap: Metanorma Snap Package
+== Purpose
+
+Snapcraft is a tool to build, package and distribute software for Linux
+distributions. It is a cross-platform package manager that allows developers
+to create and distribute software packages that can run on any Linux
+distribution that supports the snap format.
+
+The Metanorma snap package is a self-contained package that includes all the
+dependencies required to run Metanorma. It is designed to be easy to install
+and use, and it provides a consistent environment for running Metanorma
+across different Linux distributions.
+
+The Metanorma executable provided in the snap package is the released executable
+from https://github.com/metanorma/packed-mn[packed-mn], which is
+https://github.com/metanorma/metanorma-cli[metanorma-cli] compiled via
+https://github.com/tamatebako/tebako[Tebako].
+
 
 == Installation
 
-The released Metanorma snap package is located at Snapcraft: https://snapcraft.io/metanorma[Metanorma snap].
+The released Metanorma snap package is located at Snapcraft:
+https://snapcraft.io/metanorma[Metanorma snap].
+
 
 == Building the package
 
@@ -53,7 +73,13 @@ You can also try running `metanorma help` from the command-line to see if it is 
 
 == Generating the snapcraft token
 
-Run the following Docker command:
+We use the https://github.com/canonical/action-publish[canonical/action-publish]
+GitHub Actions workflow to publish our snaps.
+
+Every so often, we need to update the token used to publish the snap as the old
+one expires.
+
+Run the following Docker command to obtain credentials:
 
 [source,sh]
 ----
@@ -64,7 +90,12 @@ You will be prompted to enter your email and password.
 
 [source,sh]
 ----
-$ docker run -it snapcore/snapcraft:stable snapcraft export-login -
+$ docker run -v $PWD:/export -it snapcore/snapcraft:stable snapcraft export-login \
+  --snaps=metanorma \
+  --acls package_access,package_push,package_update,package_release \
+  /export/exported.txt
+
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
 Enter your Ubuntu One e-mail address and password.
 If you do not have an Ubuntu One account, you can create one at https://snapcraft.io/account
 Email: metanorma@ribose.com
@@ -72,22 +103,30 @@ Password:
 
 We strongly recommend enabling multi-factor authentication: https://help.ubuntu.com/community/SSO/FAQs/2FA
 
-Exported login starts on next line:
-AABBB...==
+Login successfully exported to '/export/exported.txt'. This can now be used with
 
-Login successfully exported and printed above. This can now be used with
-
-    echo "<login>" | snapcraft login --with -
+    snapcraft login --with /export/exported.txt
 
 to log in to this account with no password and have these
 capabilities:
 
-snaps:       No restriction
+snaps:       ['metanorma']
 channels:    No restriction
-permissions: ['package_access', 'package_manage', 'package_push', 'package_register', 'package_release', 'package_update']
-expires:     2023-10-26T01:01:02.020303
+permissions: ['package_access', 'package_push', 'package_update', 'package_release']
+expires:     2026-04-17T07:11:39.488266
 
 This exported login is not encrypted. Do not commit it to version control!
+----
+
+Then on your own machine, run the following command to read the file:
+
+[source,sh]
+----
+$ cat exported.txt
+[login.ubuntu.com]
+macaroon = AABBB...
+unbound_discharge = AABBB...
+email = metanorma@ribose.com
 ----
 
 NOTE: In this repository, the exported login `AABBB...==` value is placed in

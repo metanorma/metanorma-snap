@@ -61,7 +61,7 @@ parts:
       - openjdk-17-jre-headless
   xml2rfc:
     plugin: python
-    python-packages: [idnits, xml2rfc]
+    python-packages: [xml2rfc]
     stage-packages:
       - libbz2-1.0
       - libtinfo5

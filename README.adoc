@@ -139,13 +139,10 @@ NOTE: In this repository, the exported login `AABBB...==` value is placed in
 GitHub Actions' secret named `METANORMA_SNAPCRAFT_TOKEN`.
 
 
-== Release workflows
+== Release workflow (`main.yml`)
 
 This repository uses GitHub Actions workflows to automate the building and
 releasing of snap packages to different channels.
-
-
-=== Automated releases
 
 The main workflow automatically handles releases based on git events:
 
@@ -159,31 +156,14 @@ to the candidate/edge channel, then promoting the same revision to the stable
 channel using the `snapcraft release` command.
 
 
-=== Manual promotion workflow
+== Manual promotion
 
-==== General
+=== General
 
 For cases where you need to promote an existing revision to the stable channel
 without rebuilding, use the manual promotion workflow.
 
-==== Using the manual promotion workflow
-
-. Navigate to the GitHub Actions tab in the repository
-. Select the "promote-to-stable" workflow
-. Click "Run workflow"
-. Enter the revision number you want to promote to stable
-. Click "Run workflow" to execute
-
-[example]
-To promote revision 42 to stable:
-
-. Go to https://github.com/metanorma/metanorma-snap/actions
-. Click on "promote-to-stable" workflow
-. Click "Run workflow" button
-. Enter `42` in the revision field
-. Click "Run workflow"
-
-==== Finding revision numbers
+=== Finding revision numbers
 
 To find available revision numbers, you can:
 
@@ -196,6 +176,39 @@ To find available revision numbers, you can:
 snapcraft login --with /export/exported.txt
 snapcraft list-revisions metanorma
 ----
+
+
+=== Manually promoting a version to stable using the workflow
+
+. Navigate to the GitHub Actions tab in the repository
+. Select the "promote-to-stable" workflow
+. Click "Run workflow"
+. Enter the revision number you want to promote to stable
+. Click "Run workflow" to execute
+
+[example]
+====
+To promote revision 42 to stable:
+
+. Go to https://github.com/metanorma/metanorma-snap/actions
+. Click on "promote-to-stable" workflow
+. Click "Run workflow" button
+. Enter `42` in the revision field
+. Click "Run workflow"
+====
+
+
+=== Manually promoting revisions
+
+For cases where you need to promote an existing revision to the stable channel
+without rebuilding, run the following local commands (e.g. through Docker).
+
+[source,sh]
+----
+snapcraft login --with /export/exported.txt
+snapcraft release metanorma <revision> stable
+----
+
 
 === Use cases for manual promotion
 

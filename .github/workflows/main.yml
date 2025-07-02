@@ -120,16 +120,16 @@ jobs:
     name: Release stable
     needs: [release-edge]
     runs-on: ubuntu-latest
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
     steps:
       - name: Install snapcraft
         run: sudo snap install snapcraft --classic
 
       - name: Login to snapcraft
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         run: |
           echo "$SNAPCRAFT_STORE_CREDENTIALS" | snapcraft login --with -
 
       - name: Release to stable channel
         run: |
-          snapcraft release metanorma ${{ needs.release-edge.outputs.revision }} --channel=stable
+          snapcraft release metanorma ${{ needs.release-edge.outputs.revision }} stable

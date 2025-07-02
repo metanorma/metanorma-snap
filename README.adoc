@@ -5,11 +5,6 @@ image:https://snapcraft.io/metanorma/badge.svg["Snap Version", link="https://sna
 
 == Purpose
 
-Snapcraft is a tool to build, package and distribute software for Linux
-distributions. It is a cross-platform package manager that allows developers
-to create and distribute software packages that can run on any Linux
-distribution that supports the snap format.
-
 The Metanorma snap package is a self-contained package that includes all the
 dependencies required to run Metanorma. It is designed to be easy to install
 and use, and it provides a consistent environment for running Metanorma
@@ -19,6 +14,14 @@ The Metanorma executable provided in the snap package is the released executable
 from https://github.com/metanorma/packed-mn[packed-mn], which is
 https://github.com/metanorma/metanorma-cli[metanorma-cli] compiled via
 https://github.com/tamatebako/tebako[Tebako].
+
+
+== What is Snapcraft?
+
+Snapcraft is a tool to build, package and distribute software for Linux
+distributions. It is a cross-platform package manager that allows developers
+to create and distribute software packages that can run on any Linux
+distribution that supports the snap format.
 
 
 == Installation
@@ -66,9 +69,11 @@ Execute the following command to uninstall LaTeXML.
 sudo snap remove metanorma
 ----
 
-After executing the uninstall ensure that the `metanorma` executable is no longer found.
+After executing the uninstall ensure that the `metanorma` executable is no
+longer found.
 
-You can also try running `metanorma help` from the command-line to see if it is still installed.
+You can also try running `metanorma help` from the command-line to see if it is
+still installed.
 
 
 == Generating the snapcraft token
@@ -95,7 +100,8 @@ $ docker run -v $PWD:/export -it snapcore/snapcraft:stable snapcraft export-logi
   --acls package_access,package_push,package_update,package_release \
   /export/exported.txt
 
-WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+WARNING: The requested image's platform (linux/amd64) does not match the
+detected host platform (linux/arm64/v8) and no specific platform was requested
 Enter your Ubuntu One e-mail address and password.
 If you do not have an Ubuntu One account, you can create one at https://snapcraft.io/account
 Email: metanorma@ribose.com
@@ -131,3 +137,77 @@ email = metanorma@ribose.com
 
 NOTE: In this repository, the exported login `AABBB...==` value is placed in
 GitHub Actions' secret named `METANORMA_SNAPCRAFT_TOKEN`.
+
+
+== Release workflows
+
+This repository uses GitHub Actions workflows to automate the building and
+releasing of snap packages to different channels.
+
+
+=== Automated releases
+
+The main workflow automatically handles releases based on git events:
+
+* **Main branch pushes**: Automatically releases to the `edge` channel for
+  the `main` branch and `vx.y.zpre`
+* **Version tags**: Automatically releases to both `candidate` and `stable`
+  channels for production use for `vx.y.z`
+
+The workflow follows Snapcraft best practices by uploading the snap package once
+to the candidate/edge channel, then promoting the same revision to the stable
+channel using the `snapcraft release` command.
+
+
+=== Manual promotion workflow
+
+==== General
+
+For cases where you need to promote an existing revision to the stable channel
+without rebuilding, use the manual promotion workflow.
+
+==== Using the manual promotion workflow
+
+. Navigate to the GitHub Actions tab in the repository
+. Select the "promote-to-stable" workflow
+. Click "Run workflow"
+. Enter the revision number you want to promote to stable
+. Click "Run workflow" to execute
+
+[example]
+To promote revision 42 to stable:
+
+. Go to https://github.com/metanorma/metanorma-snap/actions
+. Click on "promote-to-stable" workflow
+. Click "Run workflow" button
+. Enter `42` in the revision field
+. Click "Run workflow"
+
+==== Finding revision numbers
+
+To find available revision numbers, you can:
+
+* Check the output of previous workflow runs in the GitHub Actions logs
+* Use the Snapcraft dashboard at https://snapcraft.io/metanorma/releases
+* Run the following command locally (requires snapcraft login):
+
+[source,sh]
+----
+snapcraft login --with /export/exported.txt
+snapcraft list-revisions metanorma
+----
+
+=== Use cases for manual promotion
+
+The manual promotion workflow is useful for:
+
+* **Hotfix scenarios**: Promote a specific tested revision without waiting for
+  the full build pipeline
+* **Rollback**: Promote an older revision back to stable if issues are
+  discovered
+* **Recovery**: When automated promotion fails and needs manual intervention
+* **Testing**: Promote specific revisions for validation purposes
+
+== Copyright & License
+
+Copyright Ribose. Licensed under the Ribose 2-clause BSD license.

@@ -1,0 +1,32 @@
+name: promote-to-stable
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'Revision number to promote to stable'
+        required: true
+        type: string
+
+jobs:
+  promote:
+    name: Promote revision to stable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install snapcraft
+        run: sudo snap install snapcraft --classic
+
+      - name: Login to snapcraft
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+        run: |
+          echo "$SNAPCRAFT_STORE_CREDENTIALS" | snapcraft login --with -
+
+      - name: Promote to stable channel
+        run: |
+          snapcraft release metanorma ${{ github.event.inputs.revision }} --channel=stable
+
+      - name: Summary
+        run: |
+          echo "✅ Successfully promoted revision ${{ github.event.inputs.revision }} to stable channel"
+          echo "The metanorma snap package is now available in the stable channel."

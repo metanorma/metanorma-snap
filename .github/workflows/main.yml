@@ -76,18 +76,44 @@ jobs:
               }
 
               const architectures = JSON.parse(architecturesOutput);
-              const samplesMatrix = JSON.parse(samplesMatrixOutput);
+              let samplesMatrix;
+
+              try {
+                samplesMatrix = JSON.parse(samplesMatrixOutput);
+              } catch (parseError) {
+                console.error('Failed to parse samples matrix:', parseError);
+                console.log('Samples matrix output type:', typeof samplesMatrixOutput);
+                console.log('Samples matrix output length:', samplesMatrixOutput.length);
+                throw new Error(`Failed to parse samples matrix: ${parseError.message}`);
+              }
+
+              console.log('Parsed samples matrix:', JSON.stringify(samplesMatrix, null, 2));
+              console.log('Samples matrix type:', typeof samplesMatrix);
+              console.log('Samples matrix has include:', 'include' in samplesMatrix);
 
               const matrix = {
                 include: []
               };
 
+              // Handle different possible formats of samplesMatrix
+              let flavors = [];
+              if (samplesMatrix && samplesMatrix.include && Array.isArray(samplesMatrix.include)) {
+                flavors = samplesMatrix.include;
+              } else if (Array.isArray(samplesMatrix)) {
+                flavors = samplesMatrix;
+              } else {
+                console.error('Unexpected samples matrix format:', samplesMatrix);
+                throw new Error('samplesMatrix.include is not iterable - unexpected format');
+              }
+
+              console.log('Using flavors:', JSON.stringify(flavors, null, 2));
+
               for (const arch of architectures) {
-                for (const flavor of samplesMatrix.include) {
+                for (const flavor of flavors) {
                   matrix.include.push({
                     architecture: arch,
                     id: flavor.id,
-                    experimental: flavor.experimental
+                    experimental: flavor.experimental || false
                   });
                 }
               }

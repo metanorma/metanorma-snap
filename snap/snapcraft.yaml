@@ -9,14 +9,16 @@ grade: stable
 confinement: strict
 platforms:
   amd64:
-    build-on: amd64
+    build-on: [amd64]
+    build-for: [amd64]
   arm64:
-    build-on: arm64
+    build-on: [arm64]
+    build-for: [arm64]
 apps:
   metanorma:
     command: bin/metanorma
     environment:
-      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/default-java/bin:$PATH
+      PATH: $SNAP/local/bin:$SNAP/usr/bin:$PATH
       DEBUG: "*:*"
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
@@ -27,19 +29,18 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: usr/lib/jvm/default-java/bin/java -jar $SNAP/jar/plantuml-1.2025.4.jar
+    command: usr/bin/java -jar $SNAP/jar/plantuml-1.2025.4.jar
 parts:
   packed-mn:
     plugin: dump
     source: .
     override-build: |
-      # Use CRAFT_TARGET_ARCH instead of SNAPCRAFT_TARGET_ARCH
-      if [ "$CRAFT_TARGET_ARCH" = "amd64" ]; then
+      if [ "$CRAFT_ARCH_BUILD_FOR" = "amd64" ]; then
         ARCH_NAME="x86_64"
-      elif [ "$CRAFT_TARGET_ARCH" = "arm64" ]; then
+      elif [ "$CRAFT_ARCH_BUILD_FOR" = "arm64" ]; then
         ARCH_NAME="aarch64"
       else
-        echo "Unsupported architecture: $CRAFT_TARGET_ARCH"
+        echo "Unsupported architecture: $CRAFT_ARCH_BUILD_FOR"
         exit 1
       fi
       wget -O metanorma-linux-${ARCH_NAME}.tgz https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-${ARCH_NAME}.tgz
@@ -80,7 +81,8 @@ parts:
       - libsystemd0
       - zlib1g
       - graphviz
-      - openjdk-21-jre-headless
+      - on amd64: [openjdk-21-jre-headless:amd64]
+      - on arm64: [openjdk-21-jre-headless:arm64]
   xml2rfc:
     plugin: python
     source: .

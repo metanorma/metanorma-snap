@@ -50,6 +50,9 @@ jobs:
     name: Build snap
     needs: [get-architectures]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    outputs:
+      snap-filename-amd64: ${{ matrix.architecture == 'amd64' && steps.get-snap-name.outputs.filename || '' }}
+      snap-filename-arm64: ${{ matrix.architecture == 'arm64' && steps.get-snap-name.outputs.filename || '' }}
     strategy:
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
@@ -68,6 +71,13 @@ jobs:
         uses: snapcore/action-build@v1
         env:
           SNAPCRAFT_TARGET_ARCH: ${{ matrix.architecture }}
+      - name: Get snap filename
+        id: get-snap-name
+        run: |
+          snap_path="${{ steps.snapcraft.outputs.snap }}"
+          snap_filename=$(basename "$snap_path")
+          echo "filename=$snap_filename" >> $GITHUB_OUTPUT
+          echo "Snap filename: $snap_filename"
       - uses: actions/upload-artifact@v4
         with:
           name: metanorma-snap-${{ matrix.architecture }}
@@ -229,6 +239,24 @@ jobs:
           name: metanorma-snap-${{ matrix.architecture }}
           path: ./snap
 
+      - name: List snap files
+        run: |
+          echo "Contents of snap directory:"
+          ls -la snap/
+          echo "Snap files found:"
+          find snap/ -name "*.snap" -type f
+
+      - name: Get snap file path
+        id: get-snap-file
+        run: |
+          snap_file=$(find snap/ -name "*.snap" -type f | head -n 1)
+          if [ -z "$snap_file" ]; then
+            echo "Error: No snap file found in snap/ directory"
+            exit 1
+          fi
+          echo "snap_file=$snap_file" >> $GITHUB_OUTPUT
+          echo "Found snap file: $snap_file"
+
       # Publish to edge and beta for main branch
       - name: Publish ${{ matrix.architecture }} to edge and beta
         if: github.ref == 'refs/heads/main'
@@ -237,7 +265,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         with:
           store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-          snap: snap/*.snap
+          snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: edge,beta
 
       # Publish to beta and candidate for tags
@@ -248,7 +276,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         with:
           store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-          snap: snap/*.snap
+          snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: beta,candidate
 
   promote-to-stable:

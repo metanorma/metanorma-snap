@@ -27,7 +27,7 @@ jobs:
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref }}
 
-    - run: echo ${SNAP_VERSION} > VERSION
+    - run: echo -n ${SNAP_VERSION} > VERSION
 
     - name: Push commit and tag
       run: |

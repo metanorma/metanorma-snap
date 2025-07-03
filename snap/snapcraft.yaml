@@ -33,12 +33,13 @@ parts:
     plugin: dump
     source: .
     override-build: |
-      if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" ]; then
+      # Use CRAFT_TARGET_ARCH instead of SNAPCRAFT_TARGET_ARCH
+      if [ "$CRAFT_TARGET_ARCH" = "amd64" ]; then
         ARCH_NAME="x86_64"
-      elif [ "$SNAPCRAFT_TARGET_ARCH" = "arm64" ]; then
+      elif [ "$CRAFT_TARGET_ARCH" = "arm64" ]; then
         ARCH_NAME="aarch64"
       else
-        echo "Unsupported architecture: $SNAPCRAFT_TARGET_ARCH"
+        echo "Unsupported architecture: $CRAFT_TARGET_ARCH"
         exit 1
       fi
       wget -O metanorma-linux-${ARCH_NAME}.tgz https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-${ARCH_NAME}.tgz

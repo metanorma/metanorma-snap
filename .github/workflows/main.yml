@@ -25,8 +25,14 @@ jobs:
       - name: Get snap architectures
         id: get-architectures
         run: |
-          # Extract architectures from snapcraft.yaml
-          architectures=$(yq eval '.architectures[].build-on' snap/snapcraft.yaml | jq -R -s -c 'split("\n")[:-1]')
+          # Extract architectures from snapcraft.yaml (handle both old architectures and new platforms format)
+          if yq eval '.platforms' snap/snapcraft.yaml | grep -q "null"; then
+            # Old format: architectures
+            architectures=$(yq eval '.architectures[].build-on' snap/snapcraft.yaml | jq -R -s -c 'split("\n")[:-1]')
+          else
+            # New format: platforms
+            architectures=$(yq eval '.platforms | keys' snap/snapcraft.yaml | jq -c '.')
+          fi
           echo "architectures=$architectures" >> $GITHUB_OUTPUT
           echo "Found architectures: $architectures"
 
@@ -39,9 +45,19 @@ jobs:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Debug environment
+        run: |
+          echo "Architecture: ${{ matrix.architecture }}"
+          echo "SNAPCRAFT_TARGET_ARCH: $SNAPCRAFT_TARGET_ARCH"
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner arch: ${{ runner.arch }}"
+          ls -la snap/
+          cat snap/snapcraft.yaml
       - name: Build snap for ${{ matrix.architecture }}
         id: snapcraft
         uses: snapcore/action-build@v1
+        env:
+          SNAPCRAFT_TARGET_ARCH: ${{ matrix.architecture }}
       - uses: actions/upload-artifact@v4
         with:
           name: metanorma-snap-${{ matrix.architecture }}

@@ -49,16 +49,24 @@ OpenJDK path available as `java` in an arch-independent way.
 NOTE: The tip to use a wrapper for OpenJDK path independence is inspired by
 the
 https://github.com/diddlesnaps/makemkv/blob/68151f33210b0190e41d4cca9ad0ba75afaafe0f/snap/snapcraft.yaml#L106[MakeMKV snap package]
+by https://github.com/lucyllewy[lucyllewy]
 where an executable wrapper is used to wrap a Java program.
 +
 NOTE: The tip to use layouts to create an arch-independent Java path (thank you!) is inspired by the
 https://github.com/diddlesnaps/makemkv/blob/68151f33210b0190e41d4cca9ad0ba75afaafe0f/snap/snapcraft.yaml#L23[MakeMKV snap package]
-by https://github.com/diddlesnaps[diddlesnaps] and the
+by https://github.com/lucyllewy[lucyllewy] and the
 https://github.com/canonical/snapcraft/blob/dacb9c70238041e7c7f7e5bb9ba4ba530b466b1f/docs/how-to/extensions/expand-extensions.rst?plain=1#L21["Expand extensions" article]
 which demonstrates that the `SNAP_*`/`CRAFT_*` environment variables are
 accessible in the `layouts:` paths.
 
+* The containers used for building snap packages are vanilla GitHub Action Runners
+because the official https://hub.docker.com/r/snapcore/snapcraft/[snapcraft containers]
+lack arm64 versions, and are severely outdated from 2021.
 
+* The workflow manually builds across multiple-architectures instead of integrated workflows
+like https://github.com/diddlesnaps/snapcraft-multiarch-action[diddlesnaps/snapcraft-multiarch-action] in
+order to take advantage of the latest
+https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/[GitHub arm64 runners].
 
 == Building the package
 

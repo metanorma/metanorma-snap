@@ -4,7 +4,17 @@ on:
   push:
     branches: [ main ]
     tags: [ v* ]
+    paths-ignore:
+      - 'README.adoc'
+      - '.github/workflows/release-tag.yml'
+      - '.github/workflows/promote-to-stable.yml'
+      - '.github/workflows/re-tag.yml'
   pull_request:
+    paths-ignore:
+      - 'README.adoc'
+      - '.github/workflows/release-tag.yml'
+      - '.github/workflows/promote-to-stable.yml'
+      - '.github/workflows/re-tag.yml'
 
 jobs:
   build-matrix:

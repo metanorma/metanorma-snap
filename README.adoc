@@ -30,6 +30,36 @@ The released Metanorma snap package is located at Snapcraft:
 https://snapcraft.io/metanorma[Metanorma snap].
 
 
+== Decisions
+
+* The packages are built using `ubuntu-24.04` (amd64) and `ubuntu-24.04-arm` (arm64).
+
+* The default Ubuntu plantuml package is not used since it severely outdated
+from 2020. The Metanorma snap package bundles a latest version of PlantUML.
+
+* The `plantuml` command is actually a wrapper (`scripts/plantuml`) as the OpenJDK
+packaged in snap leads to a hardcoded path with the architecture code in there
+(`amd64` or `arm64`) yet the `command:` key in snapcraft.yml does not support
+the `on {amd64|arm64}` pattern as supported by the `source:` key and the
+`*-packages:` keys. The workaround therefore is to provide a wrapper that uses
+`java` which is provided through the snapcraft `layouts:` key which performs a
+mapping between the host system and the snap package, to make the arch-specific
+OpenJDK path available as `java` in an arch-independent way.
++
+NOTE: The tip to use a wrapper for OpenJDK path independence is inspired by
+the
+https://github.com/diddlesnaps/makemkv/blob/68151f33210b0190e41d4cca9ad0ba75afaafe0f/snap/snapcraft.yaml#L106[MakeMKV snap package]
+where an executable wrapper is used to wrap a Java program.
++
+NOTE: The tip to use layouts to create an arch-independent Java path (thank you!) is inspired by the
+https://github.com/diddlesnaps/makemkv/blob/68151f33210b0190e41d4cca9ad0ba75afaafe0f/snap/snapcraft.yaml#L23[MakeMKV snap package]
+by https://github.com/diddlesnaps[diddlesnaps] and the
+https://github.com/canonical/snapcraft/blob/dacb9c70238041e7c7f7e5bb9ba4ba530b466b1f/docs/how-to/extensions/expand-extensions.rst?plain=1#L21["Expand extensions" article]
+which demonstrates that the `SNAP_*`/`CRAFT_*` environment variables are
+accessible in the `layouts:` paths.
+
+
+
 == Building the package
 
 On Linux:

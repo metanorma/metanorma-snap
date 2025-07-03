@@ -39,7 +39,7 @@ jobs:
   build:
     name: Build snap
     needs: [get-architectures]
-    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-latest-arm64' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
@@ -169,7 +169,7 @@ jobs:
   test:
     name: Test ${{ matrix.architecture }} - ${{ matrix.id }}
     needs: [build, build-test-matrix]
-    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-latest-arm64' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
 
     concurrency:
       group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.architecture }}-${{ matrix.id }}-${{ github.head_ref || github.ref_name }}'
@@ -208,7 +208,7 @@ jobs:
   publish:
     name: Publish snap
     needs: [build, test, get-architectures]
-    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-latest-arm64' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}

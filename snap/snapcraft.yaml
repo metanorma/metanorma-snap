@@ -2,10 +2,10 @@
 ---
 name: metanorma
 base: core24
-version: '1.12.10'
 summary: Metanorma documentation generator
 description: "Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here's what you can do with Metanorma: \n- Build tools for authoring standards and formatting them in accordance with your organization's practices\n- Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.\n"
 grade: stable
+adopt-info: packed-mn
 confinement: strict
 platforms:
   amd64:
@@ -45,7 +45,13 @@ parts:
   packed-mn:
     plugin: dump
     source: .
-    override-build: |
+    override-pull: |
+      # Use contents of the VERSION file (e.g. 1.2.3) as the snap package version
+      export VERSION=$(cat VERSION)
+      echo "Setting snap version to '$VERSION'"
+      craftctl set version="$VERSION"
+      echo "$VERSION" > "$SNAPCRAFT_PROJECT_DIR/version"
+
       if [ "$CRAFT_ARCH_BUILD_FOR" = "amd64" ]; then
         ARCH_NAME="x86_64"
       elif [ "$CRAFT_ARCH_BUILD_FOR" = "arm64" ]; then
@@ -54,15 +60,17 @@ parts:
         echo "Unsupported architecture: $CRAFT_ARCH_BUILD_FOR"
         exit 1
       fi
-      wget -O metanorma-linux-${ARCH_NAME}.tgz https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-${ARCH_NAME}.tgz
-      tar -xzf metanorma-linux-${ARCH_NAME}.tgz
+
+      curl --silent --show-error --location "https://github.com/metanorma/packed-mn/releases/download/v$VERSION/metanorma-linux-${ARCH_NAME}.tgz" | tar xz
       # Rename the extracted binary to a consistent name
       mv metanorma-linux-${ARCH_NAME} metanorma-binary
+    override-build: |
       # Copy to install directory
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp metanorma-binary $SNAPCRAFT_PART_INSTALL/bin/metanorma
+      craftctl default
     build-packages:
-      - wget
+      - curl
     stage-packages:
       - git-core
       - zlib1g
@@ -78,7 +86,7 @@ parts:
     plugin: nil
     override-build: |
       mkdir $SNAPCRAFT_PART_INSTALL/jar
-      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2025.4/plantuml-1.2025.4.jar -O $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2025.4.jar
+      curl --silent --show-error --location https://github.com/plantuml/plantuml/releases/download/v1.2025.4/plantuml-1.2025.4.jar -o $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2025.4.jar
 
       # Create symbolic links for Java executables following MakeMKV pattern
       JDK=$(find /usr/lib/jvm -type d -name "java-21-openjdk-*" | head -n1 | xargs basename)
@@ -87,7 +95,7 @@ parts:
         ln -sf $JDKBIN/$exec $SNAPCRAFT_PART_INSTALL/usr/bin/$exec
       done
     build-packages:
-      - wget
+      - curl
       # https://askubuntu.com/questions/1054854/snap-package-error-uploading
       - ca-certificates
       - ca-certificates-java

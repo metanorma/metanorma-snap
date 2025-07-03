@@ -56,25 +56,44 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const architectures = ${{ needs.get-architectures.outputs.architectures }};
-            const samplesMatrix = ${{ needs.build-matrix.outputs.samples-matrix }};
+            try {
+              const architecturesOutput = '${{ needs.get-architectures.outputs.architectures }}';
+              const samplesMatrixOutput = '${{ needs.build-matrix.outputs.samples-matrix }}';
 
-            const matrix = {
-              include: []
-            };
+              console.log('Raw architectures output:', architecturesOutput);
+              console.log('Raw samples matrix output:', samplesMatrixOutput);
 
-            for (const arch of architectures) {
-              for (const flavor of samplesMatrix.include) {
-                matrix.include.push({
-                  architecture: arch,
-                  id: flavor.id,
-                  experimental: flavor.experimental
-                });
+              if (!architecturesOutput || architecturesOutput === '') {
+                throw new Error('Architectures output is empty');
               }
-            }
 
-            console.log('Generated matrix:', JSON.stringify(matrix, null, 2));
-            core.setOutput('matrix', JSON.stringify(matrix));
+              if (!samplesMatrixOutput || samplesMatrixOutput === '') {
+                throw new Error('Samples matrix output is empty');
+              }
+
+              const architectures = JSON.parse(architecturesOutput);
+              const samplesMatrix = JSON.parse(samplesMatrixOutput);
+
+              const matrix = {
+                include: []
+              };
+
+              for (const arch of architectures) {
+                for (const flavor of samplesMatrix.include) {
+                  matrix.include.push({
+                    architecture: arch,
+                    id: flavor.id,
+                    experimental: flavor.experimental
+                  });
+                }
+              }
+
+              console.log('Generated matrix:', JSON.stringify(matrix, null, 2));
+              core.setOutput('matrix', JSON.stringify(matrix));
+            } catch (error) {
+              console.error('Error building test matrix:', error);
+              core.setFailed(`Failed to build test matrix: ${error.message}`);
+            }
 
   test:
     name: Test ${{ matrix.architecture }} - ${{ matrix.id }}
@@ -117,11 +136,11 @@ jobs:
 
   publish:
     name: Publish snap
-    needs: [build, test]
+    needs: [build, test, get-architectures]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-latest-arm64' || 'ubuntu-latest' }}
     strategy:
       matrix:
-        architecture: [amd64, arm64]
+        architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4

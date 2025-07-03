@@ -27,17 +27,13 @@ jobs:
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref }}
 
-    - run: |
-        sudo apt update && sudo apt install -y snapd
-        sudo snap install yq
-
-    - run: ./snap-set-version.sh ${SNAP_VERSION}
+    - run: echo ${SNAP_VERSION} > VERSION
 
     - name: Push commit and tag
       run: |
         git config --global user.name "metanorma-ci"
         git config --global user.email "metanorma-ci@users.noreply.github.com"
-        git add snap/snapcraft.yaml
+        git add VERSION
         git commit -m "Bump version to ${SNAP_VERSION}"
         git tag v${SNAP_VERSION}
         git push origin HEAD:${GITHUB_REF} --tags

@@ -44,38 +44,70 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
           retention-days: 5
 
-  test:
-    name: Test
-    needs: [build, build-matrix]
+  build-test-matrix:
+    name: Build test matrix
+    needs: [build-matrix, get-architectures]
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+    steps:
+      - name: Build test matrix
+        id: build-matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const architectures = ${{ needs.get-architectures.outputs.architectures }};
+            const samplesMatrix = ${{ needs.build-matrix.outputs.samples-matrix }};
+
+            const matrix = {
+              include: []
+            };
+
+            for (const arch of architectures) {
+              for (const flavor of samplesMatrix.include) {
+                matrix.include.push({
+                  architecture: arch,
+                  id: flavor.id,
+                  experimental: flavor.experimental
+                });
+              }
+            }
+
+            console.log('Generated matrix:', JSON.stringify(matrix, null, 2));
+            core.setOutput('matrix', JSON.stringify(matrix));
+
+  test:
+    name: Test ${{ matrix.architecture }} - ${{ matrix.id }}
+    needs: [build, build-test-matrix]
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-latest-arm64' || 'ubuntu-latest' }}
 
     concurrency:
-      group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.architecture }}-${{ matrix.id }}-${{ github.head_ref || github.ref_name }}'
       cancel-in-progress: true
 
-    continue-on-error: ${{ matrix.flavor.experimental }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       max-parallel: 5
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
+      matrix: ${{ fromJson(needs.build-test-matrix.outputs.matrix) }}
 
     steps:
       - run: sudo apt update && sudo apt install -y snapd
 
       - uses: actions/download-artifact@v4
         with:
-          name: metanorma-snap-amd64
+          name: metanorma-snap-${{ matrix.architecture }}
           path: ./snap
 
       - run: |
           sudo snap install snap/*.snap --devmode
           sudo snap connect metanorma:home :home
 
-      - name: Fetch samples (${{ matrix.flavor.id }})
+      - name: Fetch samples (${{ matrix.id }})
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
+          repository: metanorma/mn-samples-${{ matrix.id }}
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 

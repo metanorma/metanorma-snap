@@ -42,10 +42,14 @@ snapcraft snap
 
 Via Docker:
 
+WARNING: This is not working on macOS.
+
 [source,sh]
 ----
-docker run -v $(pwd):/build -w /build -it snapcore/snapcraft:stable snapcraft snap
+docker run --rm -it --privileged -v $PWD:/data -w /data ghcr.io/canonical/snapcraft-container:core24
 ----
+
+NOTE: Snapcraft relies on `snapd` which requires privileged containers.
 
 == Testing the package
 

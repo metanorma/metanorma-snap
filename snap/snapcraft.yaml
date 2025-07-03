@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/canonical/snapcraft/refs/heads/main/schema/snapcraft.json
+---
 name: metanorma
 base: core24
 version: '1.12.10'
@@ -30,7 +32,7 @@ parts:
   packed-mn:
     plugin: dump
     source: .
-    override-pull: |
+    override-build: |
       if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" ]; then
         ARCH_NAME="x86_64"
       elif [ "$SNAPCRAFT_TARGET_ARCH" = "arm64" ]; then
@@ -43,8 +45,9 @@ parts:
       tar -xzf metanorma-linux-${ARCH_NAME}.tgz
       # Rename the extracted binary to a consistent name
       mv metanorma-linux-${ARCH_NAME} metanorma-binary
-    organize:
-      metanorma-binary: bin/metanorma
+      # Copy to install directory
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp metanorma-binary $SNAPCRAFT_PART_INSTALL/bin/metanorma
     build-packages:
       - wget
     stage-packages:

@@ -24,7 +24,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get snap architectures
         id: get-architectures
-        uses: snapcrafters/ci/get-architectures@main
+        run: |
+          # Extract architectures from snapcraft.yaml
+          architectures=$(yq eval '.architectures[].build-on' snap/snapcraft.yaml | jq -R -s -c 'split("\n")[:-1]')
+          echo "architectures=$architectures" >> $GITHUB_OUTPUT
+          echo "Found architectures: $architectures"
 
   build:
     name: Build snap

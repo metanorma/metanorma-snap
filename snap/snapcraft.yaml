@@ -47,10 +47,9 @@ parts:
     source: .
     override-pull: |
       # Use contents of the VERSION file (e.g. 1.2.3) as the snap package version
-      export VERSION=$(cat VERSION)
+      export VERSION=$(cat $SNAPCRAFT_PROJECT_DIR/VERSION)
       echo "Setting snap version to '$VERSION'"
       craftctl set version="$VERSION"
-      echo "$VERSION" > "$SNAPCRAFT_PROJECT_DIR/version"
 
       if [ "$CRAFT_ARCH_BUILD_FOR" = "amd64" ]; then
         ARCH_NAME="x86_64"

@@ -26,12 +26,12 @@ jobs:
         id: get-architectures
         run: |
           # Extract architectures from snapcraft.yaml (handle both old architectures and new platforms format)
-          if yq eval '.platforms' snap/snapcraft.yaml | grep -q "null"; then
-            # Old format: architectures
-            architectures=$(yq eval '.architectures[].build-on' snap/snapcraft.yaml | jq -R -s -c 'split("\n")[:-1]')
-          else
+          if yq eval '.platforms' snap/snapcraft.yaml >/dev/null 2>&1 && [ "$(yq eval '.platforms' snap/snapcraft.yaml)" != "null" ]; then
             # New format: platforms
             architectures=$(yq eval '.platforms | keys' snap/snapcraft.yaml | jq -c '.')
+          else
+            # Old format: architectures
+            architectures=$(yq eval '.architectures[].build-on' snap/snapcraft.yaml | jq -R -s -c 'split("\n")[:-1]')
           fi
           echo "architectures=$architectures" >> $GITHUB_OUTPUT
           echo "Found architectures: $architectures"

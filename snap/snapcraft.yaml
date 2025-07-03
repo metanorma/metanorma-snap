@@ -1,5 +1,5 @@
 name: metanorma
-base: core20
+base: core24
 version: '1.12.10'
 summary: Metanorma documentation generator
 description: "Metanorma an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here's what you can do with Metanorma: \n- Build tools for authoring standards and formatting them in accordance with your organization's practices\n- Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.\n"
@@ -7,11 +7,12 @@ grade: stable
 confinement: strict
 architectures:
   - build-on: amd64
+  - build-on: arm64
 apps:
   metanorma:
     command: bin/metanorma
     environment:
-      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
+      PATH: $SNAP/local/bin:$SNAP/usr/lib/jvm/default-java/bin:$PATH
       DEBUG: "*:*"
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
@@ -22,13 +23,27 @@ apps:
       - gsettings
       - home
   plantuml:
-    command: usr/lib/jvm/java-17-openjdk-amd64/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
+    command: usr/lib/jvm/default-java/bin/java -jar $SNAP/jar/plantuml-1.2022.12.jar
 parts:
   packed-mn:
     plugin: dump
-    source: https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-x86_64.tgz
+    source: .
+    override-pull: |
+      if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" ]; then
+        ARCH_NAME="x86_64"
+      elif [ "$SNAPCRAFT_TARGET_ARCH" = "arm64" ]; then
+        ARCH_NAME="aarch64"
+      else
+        echo "Unsupported architecture: $SNAPCRAFT_TARGET_ARCH"
+        exit 1
+      fi
+      wget -O metanorma-linux-${ARCH_NAME}.tgz https://github.com/metanorma/packed-mn/releases/download/v$SNAPCRAFT_PROJECT_VERSION/metanorma-linux-${ARCH_NAME}.tgz
+      tar -xzf metanorma-linux-${ARCH_NAME}.tgz
     organize:
       metanorma-linux-x86_64: bin/metanorma
+      metanorma-linux-aarch64: bin/metanorma
+    build-packages:
+      - wget
     stage-packages:
       - git-core
       - zlib1g
@@ -37,20 +52,20 @@ parts:
       - libdb5.3
       - libselinux1
       - libsystemd0
-      - libtinfo5
+      - libtinfo6
       - libudev1
       - libmspack-dev
   plantuml:
     plugin: nil
     override-build: |
       mkdir $SNAPCRAFT_PART_INSTALL/jar
-      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2022.12/plantuml-1.2022.12.jar -O $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2022.12.jar
+      wget --quiet https://github.com/plantuml/plantuml/releases/download/v1.2025.4/plantuml-1.2025.4.jar -O $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2025.4.jar
     build-packages:
       - wget
       # https://askubuntu.com/questions/1054854/snap-package-error-uploading
       - ca-certificates
       - ca-certificates-java
-      - openjdk-17-jre-headless
+      - openjdk-21-jre-headless
     stage-packages:
       - libgcrypt20
       - liblzma5
@@ -58,13 +73,14 @@ parts:
       - libsystemd0
       - zlib1g
       - graphviz
-      - openjdk-17-jre-headless
+      - openjdk-21-jre-headless
   xml2rfc:
     plugin: python
     python-packages: [xml2rfc]
     stage-packages:
       - libbz2-1.0
-      - libtinfo5
+      - libtinfo6
       - zlib1g
       - libdb5.3
-      - libncursesw5
+      - libncursesw6
+

@@ -7,6 +7,15 @@ on:
         description: 'Revision number to promote to stable'
         required: true
         type: string
+  workflow_call:
+    inputs:
+      revision:
+        description: 'Revision number to promote to stable'
+        required: false
+        type: string
+    secrets:
+      METANORMA_SNAPCRAFT_TOKEN:
+        required: true
 
 jobs:
   promote:
@@ -22,11 +31,24 @@ jobs:
         run: |
           echo "$SNAPCRAFT_STORE_CREDENTIALS" | snapcraft login --with -
 
-      - name: Promote to stable channel
+      - name: Promote specific revision to stable channel
+        if: ${{ inputs.revision }}
         run: |
-          snapcraft release metanorma ${{ github.event.inputs.revision }} stable
-
-      - name: Summary
-        run: |
-          echo "✅ Successfully promoted revision ${{ github.event.inputs.revision }} to stable channel"
+          snapcraft release metanorma ${{ inputs.revision }} stable
+          echo "✅ Successfully promoted revision ${{ inputs.revision }} to stable channel"
           echo "The metanorma snap package is now available in the stable channel."
+
+      - name: Promote latest candidate revision to stable channel
+        if: ${{ !inputs.revision }}
+        run: |
+          # Get the latest revision from candidate channel
+          REVISION=$(snapcraft list-revisions metanorma | grep candidate | head -1 | awk '{print $1}')
+          if [ -n "$REVISION" ]; then
+            echo "Promoting latest candidate revision $REVISION to stable"
+            snapcraft release metanorma $REVISION stable
+            echo "✅ Successfully promoted revision $REVISION to stable channel"
+            echo "The metanorma snap package is now available in the stable channel."
+          else
+            echo "No revisions found in candidate channel"
+            exit 1
+          fi

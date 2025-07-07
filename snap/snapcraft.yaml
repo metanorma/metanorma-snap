@@ -85,7 +85,7 @@ parts:
     plugin: nil
     override-build: |
       mkdir $SNAPCRAFT_PART_INSTALL/jar
-      curl --silent --show-error --location https://github.com/plantuml/plantuml/releases/download/v1.2025.4/plantuml-1.2025.4.jar -o $SNAPCRAFT_PART_INSTALL/jar/plantuml-1.2025.4.jar
+      curl --silent --show-error --location https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -o $SNAPCRAFT_PART_INSTALL/jar/plantuml.jar
 
       # Create symbolic links for Java executables following MakeMKV pattern
       JDK=$(find /usr/lib/jvm -type d -name "java-21-openjdk-*" | head -n1 | xargs basename)

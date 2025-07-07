@@ -1,2 +1,2 @@
 #!/bin/sh
-exec java -jar $SNAP/jar/plantuml-1.2025.4.jar "$@"
+exec java -jar $SNAP/jar/plantuml.jar "$@"

@@ -2,7 +2,7 @@
 ---
 name: metanorma
 base: core24
-summary: Metanorma documentation generator
+summary: Metanorma standards publication suite
 description: "Metanorma is the award-winning, open-source, digital standards suite for authoring and publishing adopted by SDOs worldwide. Start delivering tomorrow's standards, today."
 grade: stable
 adopt-info: packed-mn

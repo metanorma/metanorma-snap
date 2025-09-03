@@ -54,6 +54,7 @@ jobs:
       snap-filename-amd64: ${{ matrix.architecture == 'amd64' && steps.get-snap-name.outputs.filename || '' }}
       snap-filename-arm64: ${{ matrix.architecture == 'arm64' && steps.get-snap-name.outputs.filename || '' }}
     strategy:
+      fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
     steps:
@@ -229,7 +230,10 @@ jobs:
     name: Publish snap
     needs: [build, test, get-architectures]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
     strategy:
+      fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
     steps:
@@ -257,27 +261,73 @@ jobs:
           echo "snap_file=$snap_file" >> $GITHUB_OUTPUT
           echo "Found snap file: $snap_file"
 
+      - name: Get snap version
+        id: get-snap-version
+        run: |
+          version=$(cat VERSION)
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Snap version: $version"
+
+      - name: Install Snapcraft
+        uses: samuelmeuli/action-snapcraft@v3
+
+      - name: Check if version exists in edge/beta channels (main branch)
+        id: check-main-channels
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Use shared script to check if version exists in target channels
+          # Exit code 0 = should publish, Exit code 1 = should skip
+          if .github/scripts/check-snap-version.sh \
+            --channels "edge,beta" \
+            --version "${{ steps.get-snap-version.outputs.version }}" \
+            --architecture "${{ matrix.architecture }}"; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if version exists in beta/candidate channels (tags)
+        id: check-tag-channels
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # Use shared script to check if version exists in target channels
+          # Exit code 0 = should publish, Exit code 1 = should skip
+          if .github/scripts/check-snap-version.sh \
+            --channels "beta,candidate" \
+            --version "${{ steps.get-snap-version.outputs.version }}" \
+            --architecture "${{ matrix.architecture }}"; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          fi
+
       # Publish to edge and beta for main branch
       - name: Publish ${{ matrix.architecture }} to edge and beta
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && steps.check-main-channels.outputs.should_publish == 'true'
         uses: snapcore/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         with:
           store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: edge,beta
 
+      - name: Skip publishing to edge and beta (already exists)
+        if: github.ref == 'refs/heads/main' && steps.check-main-channels.outputs.should_publish == 'false'
+        run: |
+          echo "Skipping publish to edge/beta - version ${{ steps.get-snap-version.outputs.version }} already exists for ${{ matrix.architecture }}"
+
       # Publish to beta and candidate for tags
       - name: Publish ${{ matrix.architecture }} to beta and candidate
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.check-tag-channels.outputs.should_publish == 'true'
         uses: snapcore/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         with:
           store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: beta,candidate
+
+      - name: Skip publishing to beta and candidate (already exists)
+        if: startsWith(github.ref, 'refs/tags/v') && steps.check-tag-channels.outputs.should_publish == 'false'
+        run: |
+          echo "Skipping publish to beta/candidate - version ${{ steps.get-snap-version.outputs.version }} already exists for ${{ matrix.architecture }}"
 
   promote-to-stable:
     if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')

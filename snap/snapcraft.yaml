@@ -34,14 +34,7 @@ apps:
       - network
       - gsettings
       - home
-  plantuml:
-    command: bin/plantuml
 parts:
-  scripts:
-    source: scripts
-    plugin: dump
-    organize:
-      plantuml: bin/plantuml
   packed-mn:
     plugin: dump
     source: .
@@ -81,33 +74,6 @@ parts:
       - libtinfo6
       - libudev1
       - libmspack-dev
-  plantuml:
-    plugin: nil
-    override-build: |
-      mkdir $SNAPCRAFT_PART_INSTALL/jar
-      curl --silent --show-error --location https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -o $SNAPCRAFT_PART_INSTALL/jar/plantuml.jar
-
-      # Create symbolic links for Java executables following MakeMKV pattern
-      JDK=$(find /usr/lib/jvm -type d -name "java-21-openjdk-*" | head -n1 | xargs basename)
-      JDKBIN=../lib/jvm/$JDK/bin
-      for exec in java; do
-        ln -sf $JDKBIN/$exec $SNAPCRAFT_PART_INSTALL/usr/bin/$exec
-      done
-    build-packages:
-      - curl
-      # https://askubuntu.com/questions/1054854/snap-package-error-uploading
-      - ca-certificates
-      - ca-certificates-java
-      - openjdk-21-jre-headless
-    stage-packages:
-      - libgcrypt20
-      - liblzma5
-      - libselinux1
-      - libsystemd0
-      - zlib1g
-      - graphviz
-      - on amd64: [openjdk-21-jre-headless:amd64]
-      - on arm64: [openjdk-21-jre-headless:arm64]
   xml2rfc:
     plugin: python
     source: .

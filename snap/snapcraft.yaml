@@ -34,14 +34,7 @@ apps:
       - network
       - gsettings
       - home
-  plantuml:
-    command: bin/plantuml
 parts:
-  scripts:
-    source: scripts
-    plugin: dump
-    organize:
-      plantuml: bin/plantuml
   packed-mn:
     plugin: dump
     source: .
@@ -81,12 +74,10 @@ parts:
       - libtinfo6
       - libudev1
       - libmspack-dev
-  plantuml:
+  openjdk:
     plugin: nil
     override-build: |
-      mkdir $SNAPCRAFT_PART_INSTALL/jar
-      curl --silent --show-error --location https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -o $SNAPCRAFT_PART_INSTALL/jar/plantuml.jar
-
+      mkdir -p $SNAPCRAFT_PART_INSTALL
       # Create symbolic links for Java executables following MakeMKV pattern
       JDK=$(find /usr/lib/jvm -type d -name "java-21-openjdk-*" | head -n1 | xargs basename)
       JDKBIN=../lib/jvm/$JDK/bin

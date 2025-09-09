@@ -34,17 +34,7 @@ https://snapcraft.io/metanorma[Metanorma snap].
 
 * The packages are built using `ubuntu-24.04` (amd64) and `ubuntu-24.04-arm` (arm64).
 
-* The default Ubuntu plantuml package is not used since it severely outdated
-from 2020. The Metanorma snap package bundles a latest version of PlantUML.
-
-* The `plantuml` command is actually a wrapper (`scripts/plantuml`) as the OpenJDK
-packaged in snap leads to a hardcoded path with the architecture code in there
-(`amd64` or `arm64`) yet the `command:` key in snapcraft.yml does not support
-the `on {amd64|arm64}` pattern as supported by the `source:` key and the
-`*-packages:` keys. The workaround therefore is to provide a wrapper that uses
-`java` which is provided through the snapcraft `layouts:` key which performs a
-mapping between the host system and the snap package, to make the arch-specific
-OpenJDK path available as `java` in an arch-independent way.
+* OpenJDK path available as `java` in an arch-independent way.
 +
 NOTE: The tip to use a wrapper for OpenJDK path independence is inspired by
 the

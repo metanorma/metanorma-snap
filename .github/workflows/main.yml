@@ -63,7 +63,7 @@ jobs:
 
   acceptance:
     name: Acceptance — compile inside strict confinement (${{ matrix.architecture }})
-    needs: [build]
+    needs: [build, get-architectures]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false

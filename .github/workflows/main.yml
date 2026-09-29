@@ -142,12 +142,19 @@ jobs:
       fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
+    env:
+      # The snapcraft CLI (the version probe below) reads this natively;
+      # snapcore/action-publish takes the same credential via store_login.
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap-${{ matrix.architecture }}
           path: ./snap
+
+      - name: Install snapcraft (the version probe shells out to it)
+        run: sudo snap install snapcraft --classic
 
       - name: Get snap file path
         id: get-snap-file
@@ -167,31 +174,38 @@ jobs:
         id: check-main-channels
         if: github.ref == 'refs/heads/main'
         run: |
-          # Use shared script to check if version exists in target channels
-          # Exit code 0 = should publish, Exit code 1 = should skip
-          if .github/scripts/check-snap-version.sh \
+          # Shared script: exit 0 = publish, 1 = skip, 2 = probe ERROR.
+          # An error must fail loudly — collapsing it into "skip" silently
+          # strands the release (v1.17.0's first main run did exactly this
+          # when snapcraft was not installed here).
+          rc=0
+          .github/scripts/check-snap-version.sh \
             --channels "edge,beta" \
             --version "${{ steps.get-snap-version.outputs.version }}" \
-            --architecture "${{ matrix.architecture }}"; then
-            echo "should_publish=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_publish=false" >> $GITHUB_OUTPUT
+            --architecture "${{ matrix.architecture }}" || rc=$?
+          if [ "$rc" -eq 2 ]; then
+            echo "::error::the snap version probe errored (see the log above)"
+            exit 1
           fi
+          echo "should_publish=$([ "$rc" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: Check if version exists in beta/candidate channels (tags)
         id: check-tag-channels
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          # Use shared script to check if version exists in target channels
-          # Exit code 0 = should publish, Exit code 1 = should skip
-          if .github/scripts/check-snap-version.sh \
+          # Shared script: exit 0 = publish, 1 = skip, 2 = probe ERROR.
+          # An error must fail loudly — collapsing it into "skip" silently
+          # strands the release.
+          rc=0
+          .github/scripts/check-snap-version.sh \
             --channels "beta,candidate" \
             --version "${{ steps.get-snap-version.outputs.version }}" \
-            --architecture "${{ matrix.architecture }}"; then
-            echo "should_publish=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_publish=false" >> $GITHUB_OUTPUT
+            --architecture "${{ matrix.architecture }}" || rc=$?
+          if [ "$rc" -eq 2 ]; then
+            echo "::error::the snap version probe errored (see the log above)"
+            exit 1
           fi
+          echo "should_publish=$([ "$rc" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       # Publish to edge and beta for main branch
       - name: Publish ${{ matrix.architecture }} to edge and beta

@@ -93,7 +93,7 @@ jobs:
           mkdir -p "$HOME/mn-acceptance"
           cp "$GITHUB_WORKSPACE/tests/iso.adoc" "$HOME/mn-acceptance/"
           cd "$HOME/mn-acceptance"
-          metanorma compile -t iso -x xml,html,doc,pdf iso.adoc 2>&1 | tee "$GITHUB_WORKSPACE/compile.log"
+          metanorma compile -t iso -x xml,html,doc,pdf --agree-to-terms iso.adoc 2>&1 | tee "$GITHUB_WORKSPACE/compile.log"
           ls -la
           test -s iso.xml && test -s iso.html && test -s iso.doc && test -s iso.pdf
 

@@ -65,12 +65,18 @@ parts:
         install -D -m 0755 "$tool" "$SNAPCRAFT_PART_INSTALL/bin/${tool}"
       done
 
-  # fontist (used by metanorma to install fonts) shells out to git to
-  # fetch its formulas repo, so the snap stages git.
-  git:
+  # Host-side support tools:
+  # - git: fontist (used by metanorma to install fonts) shells out to git
+  #   to fetch its formulas repo.
+  # - fontconfig + a base font set: the openjdk runtime's JVM links
+  #   against system fontconfig; without it mn2pdf dies with
+  #   "Fontconfig head is null".
+  support-tools:
     plugin: nil
     stage-packages:
       - git
+      - fontconfig
+      - fonts-dejavu-core
 
   launcher:
     plugin: nil

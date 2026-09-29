@@ -21,6 +21,11 @@ when the snap is refreshed with a new pinned metanorma version.
 Because the payload is resolved per architecture at first run, the same
 recipe serves both `amd64` and `arm64` from native builds.
 
+NOTE: On `arm64` Linux the first-run install is currently blocked by a
+payload-coverage gap: metanorma's inkscape dependency is not yet published
+for `aarch64-linux-gnu`. The `arm64` snap builds and the acceptance leg runs
+as experimental until the inkscape payload gains that triplet.
+
 The pinned versions live in two files at the repository root:
 
 * `VERSION` — the metanorma payload version; also the snap version

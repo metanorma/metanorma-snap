@@ -20,6 +20,9 @@ platforms:
 apps:
   metanorma:
     command: bin/metanorma
+    environment:
+      GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
+      GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
     plugs:
       - browser-support
       - network
@@ -61,6 +64,13 @@ parts:
         echo "${expected}  ${tool}" | sha256sum -c -
         install -D -m 0755 "$tool" "$SNAPCRAFT_PART_INSTALL/bin/${tool}"
       done
+
+  # fontist (used by metanorma to install fonts) shells out to git to
+  # fetch its formulas repo, so the snap stages git.
+  git:
+    plugin: nil
+    stage-packages:
+      - git
 
   launcher:
     plugin: nil

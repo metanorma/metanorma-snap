@@ -2,7 +2,7 @@ name: release-tag
 
 on:
   repository_dispatch:
-    types: [ metanorma/packed-mn ]
+    types: [ tebako-packages/metanorma, metanorma/packed-mn ]
   workflow_dispatch:
     inputs:
       next_version:

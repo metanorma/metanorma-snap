@@ -14,7 +14,7 @@ on:
         required: false
         type: string
     secrets:
-      METANORMA_SNAPCRAFT_TOKEN:
+      SNAPCRAFT_STORE_CREDENTIALS:
         required: true
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Login to snapcraft
         env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
           echo "$SNAPCRAFT_STORE_CREDENTIALS" | snapcraft login --with -
 

@@ -5,15 +5,31 @@ image:https://snapcraft.io/metanorma/badge.svg["Snap Version", link="https://sna
 
 == Purpose
 
-The Metanorma snap package is a self-contained package that includes all the
-dependencies required to run Metanorma. It is designed to be easy to install
-and use, and it provides a consistent environment for running Metanorma
-across different Linux distributions.
+The Metanorma snap package provides Metanorma in a strictly confined package
+that is easy to install and use, and provides a consistent environment for
+running Metanorma across different Linux distributions.
 
-The Metanorma executable provided in the snap package is the released executable
-from https://github.com/metanorma/packed-mn[packed-mn], which is
-https://github.com/metanorma/metanorma-cli[metanorma-cli] compiled via
-https://github.com/tamatebako/tebako[Tebako].
+The snap bundles the https://github.com/tamatebako/tebako[tebako] CLI and a
+small launcher. On the first run of `metanorma`, the launcher downloads and
+checksum-verifies the metanorma payload — published by
+https://github.com/tebako-packages/metanorma[tebako-packages/metanorma] —
+together with its runtimes (Ruby, OpenJDK, Python) into a per-user store under
+the snap's data directory (`~/snap/metanorma/current/tebako`). Every
+subsequent run starts directly from that store; a new download happens only
+when the snap is refreshed with a new pinned metanorma version.
+
+Because the payload is resolved per architecture at first run, the same
+recipe serves both `amd64` and `arm64` from native builds.
+
+The pinned versions live in two files at the repository root:
+
+* `VERSION` — the metanorma payload version; also the snap version
+  (adopted at build time via `adopt-info`);
+* `TEBAKO_VERSION` — the tebako CLI release bundled into the snap.
+
+The snap requests only the `network` interface (first-run download and
+bibliography lookups) and the `home` interface (reading your documents and
+writing the compiled output).
 
 
 == What is Snapcraft?
@@ -34,20 +50,13 @@ https://snapcraft.io/metanorma[Metanorma snap].
 
 * The packages are built using `ubuntu-24.04` (amd64) and `ubuntu-24.04-arm` (arm64).
 
-* OpenJDK path available as `java` in an arch-independent way.
-+
-NOTE: The tip to use a wrapper for OpenJDK path independence is inspired by
-the
-https://github.com/diddlesnaps/makemkv/blob/68151f33210b0190e41d4cca9ad0ba75afaafe0f/snap/snapcraft.yaml#L106[MakeMKV snap package]
-by https://github.com/lucyllewy[lucyllewy]
-where an executable wrapper is used to wrap a Java program.
-+
-NOTE: The tip to use layouts to create an arch-independent Java path (thank you!) is inspired by the
-https://github.com/diddlesnaps/makemkv/blob/68151f33210b0190e41d4cca9ad0ba75afaafe0f/snap/snapcraft.yaml#L23[MakeMKV snap package]
-by https://github.com/lucyllewy[lucyllewy] and the
-https://github.com/canonical/snapcraft/blob/dacb9c70238041e7c7f7e5bb9ba4ba530b466b1f/docs/how-to/extensions/expand-extensions.rst?plain=1#L21["Expand extensions" article]
-which demonstrates that the `SNAP_*`/`CRAFT_*` environment variables are
-accessible in the `layouts:` paths.
+* The snap is a lean tebako-native package: it ships only the tebako CLI and
+a launcher, and the metanorma payload plus its runtimes are fetched and
+checksum-verified on first run into the per-user store. This was chosen over
+staging a pre-pressed binary because the tebako payload is published for both
+`amd64` and `arm64` Linux and updates independently of the snap build
+machinery. PlantUML (Java) and xml2rfc (Python) are served by the tebako
+runtime composition, so the snap carries no OpenJDK or Python parts.
 
 * The containers used for building snap packages are vanilla GitHub Action Runners
 because the official https://hub.docker.com/r/snapcore/snapcraft/[snapcraft containers]
@@ -65,7 +74,7 @@ On Linux:
 [source,sh]
 ----
 # Enter the root directory of this repo
-snapcraft snap
+snapcraft
 ----
 
 Via Docker:
@@ -87,14 +96,16 @@ If you are on macOS you can install snap to any of your multipass instances with
 ----
 multipass transfer metanorma_*_amd64.snap ${instance-name}:/home/multipass
 multipass shell ${instance-name}
-sudo snap install --devmode metanorma_*_amd64.snap
+sudo snap install --dangerous metanorma_*_amd64.snap
 ----
 
-After this the snap is ready to use.
+After this the snap is ready to use. The first `metanorma` invocation
+downloads and verifies the metanorma payload and its runtimes (a one-time
+download); later invocations reuse the per-user store.
 
 === Testing uninstallation
 
-Execute the following command to uninstall LaTeXML.
+Execute the following command to uninstall Metanorma.
 
 [source,sh]
 ----
@@ -168,7 +179,9 @@ email = metanorma@ribose.com
 ----
 
 NOTE: In this repository, the exported login `AABBB...==` value is placed in
-GitHub Actions' secret named `METANORMA_SNAPCRAFT_TOKEN`.
+GitHub Actions' secret named `SNAPCRAFT_STORE_CREDENTIALS`. The store publish
+and promote jobs run only when this secret is configured; without it they are
+skipped and the workflow still builds and tests the snap.
 
 
 == Release workflow (`main.yml`)
@@ -176,7 +189,12 @@ GitHub Actions' secret named `METANORMA_SNAPCRAFT_TOKEN`.
 This repository uses GitHub Actions workflows to automate the building and
 releasing of snap packages to different channels.
 
-The main workflow automatically handles releases based on git events:
+Every push and pull request builds the snap natively for `amd64` and `arm64`
+and runs an acceptance job that installs the snap in strict confinement and
+compiles a real ISO document.
+
+When the `SNAPCRAFT_STORE_CREDENTIALS` secret is configured, the main workflow
+additionally handles releases based on git events:
 
 * **Main branch pushes**: Automatically releases to the `edge` channel for
   the `main` branch and `vx.y.zpre`

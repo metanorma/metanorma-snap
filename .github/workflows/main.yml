@@ -17,14 +17,6 @@ on:
       - '.github/workflows/re-tag.yml'
 
 jobs:
-  build-matrix:
-    name: Matrix
-    uses: metanorma/ci/.github/workflows/build-sample-matrix.yml@main
-    with:
-      smoke: false
-      flavors-only: true
-      public-only: true
-
   get-architectures:
     name: Get snap architectures
     runs-on: ubuntu-latest
@@ -47,191 +39,95 @@ jobs:
           echo "Found architectures: $architectures"
 
   build:
-    name: Build snap
+    name: Build snap (${{ matrix.architecture }})
     needs: [get-architectures]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    outputs:
-      snap-filename-amd64: ${{ matrix.architecture == 'amd64' && steps.get-snap-name.outputs.filename || '' }}
-      snap-filename-arm64: ${{ matrix.architecture == 'arm64' && steps.get-snap-name.outputs.filename || '' }}
     strategy:
       fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Debug environment
+      - name: Show pinned versions
         run: |
-          echo "Architecture: ${{ matrix.architecture }}"
-          echo "SNAPCRAFT_TARGET_ARCH: $SNAPCRAFT_TARGET_ARCH"
-          echo "Runner OS: ${{ runner.os }}"
-          echo "Runner arch: ${{ runner.arch }}"
-          ls -la snap/
-          cat snap/snapcraft.yaml
+          echo "metanorma payload: $(cat VERSION)"
+          echo "tebako CLI:        $(cat TEBAKO_VERSION)"
       - name: Build snap for ${{ matrix.architecture }}
         id: snapcraft
         uses: snapcore/action-build@v1
-        env:
-          SNAPCRAFT_TARGET_ARCH: ${{ matrix.architecture }}
-      - name: Get snap filename
-        id: get-snap-name
-        run: |
-          snap_path="${{ steps.snapcraft.outputs.snap }}"
-          snap_filename=$(basename "$snap_path")
-          echo "filename=$snap_filename" >> $GITHUB_OUTPUT
-          echo "Snap filename: $snap_filename"
       - uses: actions/upload-artifact@v4
         with:
           name: metanorma-snap-${{ matrix.architecture }}
           path: ${{ steps.snapcraft.outputs.snap }}
           retention-days: 5
 
-  build-test-matrix:
-    name: Build test matrix
-    needs: [build-matrix, get-architectures]
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.build-matrix.outputs.matrix }}
-    steps:
-      - name: Build test matrix
-        id: build-matrix
-        uses: actions/github-script@v7
-        with:
-          script: |
-            try {
-              const architecturesOutput = '${{ needs.get-architectures.outputs.architectures }}';
-              const samplesMatrixOutput = '${{ needs.build-matrix.outputs.samples-matrix }}';
-
-              console.log('Raw architectures output:', architecturesOutput);
-              console.log('Raw samples matrix output:', samplesMatrixOutput);
-
-              if (!architecturesOutput || architecturesOutput === '') {
-                throw new Error('Architectures output is empty');
-              }
-
-              if (!samplesMatrixOutput || samplesMatrixOutput === '') {
-                throw new Error('Samples matrix output is empty');
-              }
-
-              const architectures = JSON.parse(architecturesOutput);
-              let samplesMatrix;
-
-              try {
-                samplesMatrix = JSON.parse(samplesMatrixOutput);
-              } catch (parseError) {
-                console.error('Failed to parse samples matrix:', parseError);
-                console.log('Samples matrix output type:', typeof samplesMatrixOutput);
-                console.log('Samples matrix output length:', samplesMatrixOutput.length);
-                throw new Error(`Failed to parse samples matrix: ${parseError.message}`);
-              }
-
-              console.log('Parsed samples matrix:', JSON.stringify(samplesMatrix, null, 2));
-              console.log('Samples matrix type:', typeof samplesMatrix);
-              console.log('Samples matrix has include:', 'include' in samplesMatrix);
-
-              const matrix = {
-                include: []
-              };
-
-              // Handle different possible formats of samplesMatrix
-              let flavors = [];
-              if (samplesMatrix && typeof samplesMatrix === 'object') {
-                if (samplesMatrix.include && Array.isArray(samplesMatrix.include)) {
-                  flavors = samplesMatrix.include;
-                } else if (Array.isArray(samplesMatrix)) {
-                  flavors = samplesMatrix;
-                } else if (samplesMatrix.matrix && samplesMatrix.matrix.include && Array.isArray(samplesMatrix.matrix.include)) {
-                  flavors = samplesMatrix.matrix.include;
-                } else {
-                  // Try to extract any array from the object
-                  const keys = Object.keys(samplesMatrix);
-                  console.log('Available keys in samplesMatrix:', keys);
-
-                  for (const key of keys) {
-                    if (Array.isArray(samplesMatrix[key])) {
-                      console.log(`Found array at key '${key}':`, samplesMatrix[key]);
-                      flavors = samplesMatrix[key];
-                      break;
-                    }
-                  }
-
-                  if (flavors.length === 0) {
-                    console.error('No usable array found in samples matrix:', samplesMatrix);
-                    // Fallback to a default test case
-                    flavors = [{ id: 'iso', experimental: false }];
-                    console.log('Using fallback flavors:', flavors);
-                  }
-                }
-              } else {
-                console.error('Unexpected samples matrix format:', samplesMatrix);
-                // Fallback to a default test case
-                flavors = [{ id: 'iso', experimental: false }];
-                console.log('Using fallback flavors due to unexpected format:', flavors);
-              }
-
-              console.log('Using flavors:', JSON.stringify(flavors, null, 2));
-
-              for (const arch of architectures) {
-                for (const flavor of flavors) {
-                  matrix.include.push({
-                    architecture: arch,
-                    id: flavor.id,
-                    experimental: flavor.experimental || false
-                  });
-                }
-              }
-
-              console.log('Generated matrix:', JSON.stringify(matrix, null, 2));
-              core.setOutput('matrix', JSON.stringify(matrix));
-            } catch (error) {
-              console.error('Error building test matrix:', error);
-              core.setFailed(`Failed to build test matrix: ${error.message}`);
-            }
-
-  test:
-    name: Test ${{ matrix.architecture }} - ${{ matrix.id }}
-    needs: [build, build-test-matrix]
+  acceptance:
+    name: Acceptance — compile inside strict confinement (${{ matrix.architecture }})
+    needs: [build]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-
-    concurrency:
-      group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.architecture }}-${{ matrix.id }}-${{ github.head_ref || github.ref_name }}'
-      cancel-in-progress: true
-
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
-      max-parallel: 5
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-test-matrix.outputs.matrix) }}
-
+      matrix:
+        architecture: ${{ fromJSON(needs.get-architectures.outputs.architectures) }}
     steps:
-      - run: sudo apt update && sudo apt install -y snapd
+      - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v4
         with:
           name: metanorma-snap-${{ matrix.architecture }}
           path: ./snap
 
-      - run: |
-          sudo snap install snap/*.snap --devmode
+      - name: Install snap (strict confinement, unsigned)
+        run: |
+          sudo snap install --dangerous snap/*.snap
           sudo snap connect metanorma:home :home
+          snap connections metanorma
 
-      - name: Fetch samples (${{ matrix.id }})
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          repository: metanorma/mn-samples-${{ matrix.id }}
-          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
-          fetch-depth: 1
+      - name: metanorma version (first run installs payload + runtimes)
+        timeout-minutes: 30
+        run: metanorma version 2>&1 | tee version.log
 
-      - uses: actions-mn/site-gen@v2
+      - name: Compile a real ISO document (xml/html/doc/pdf)
+        timeout-minutes: 30
+        run: |
+          mkdir -p "$HOME/mn-acceptance"
+          cp "$GITHUB_WORKSPACE/tests/iso.adoc" "$HOME/mn-acceptance/"
+          cd "$HOME/mn-acceptance"
+          metanorma compile -t iso -x xml,html,doc,pdf iso.adoc 2>&1 | tee "$GITHUB_WORKSPACE/compile.log"
+          ls -la
+          test -s iso.xml && test -s iso.html && test -s iso.doc && test -s iso.pdf
+
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          agree-to-terms: true
+          name: acceptance-log-${{ matrix.architecture }}
+          path: |
+            version.log
+            compile.log
+          retention-days: 14
+
+  credentials-check:
+    name: Check store credentials
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - id: check
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          if [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::SNAPCRAFT_STORE_CREDENTIALS is not configured; snap store upload jobs will be skipped."
+          fi
 
   publish:
-    name: Publish snap
-    needs: [build, test, get-architectures]
+    name: Publish snap (${{ matrix.architecture }})
+    if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && needs.credentials-check.outputs.present == 'true'
+    needs: [build, acceptance, get-architectures, credentials-check]
     runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -242,13 +138,6 @@ jobs:
         with:
           name: metanorma-snap-${{ matrix.architecture }}
           path: ./snap
-
-      - name: List snap files
-        run: |
-          echo "Contents of snap directory:"
-          ls -la snap/
-          echo "Snap files found:"
-          find snap/ -name "*.snap" -type f
 
       - name: Get snap file path
         id: get-snap-file
@@ -259,17 +148,10 @@ jobs:
             exit 1
           fi
           echo "snap_file=$snap_file" >> $GITHUB_OUTPUT
-          echo "Found snap file: $snap_file"
 
       - name: Get snap version
         id: get-snap-version
-        run: |
-          version=$(cat VERSION)
-          echo "version=$version" >> $GITHUB_OUTPUT
-          echo "Snap version: $version"
-
-      - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v3
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Check if version exists in edge/beta channels (main branch)
         id: check-main-channels
@@ -306,7 +188,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && steps.check-main-channels.outputs.should_publish == 'true'
         uses: snapcore/action-publish@v1
         with:
-          store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+          store_login: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: edge,beta
 
@@ -320,7 +202,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') && steps.check-tag-channels.outputs.should_publish == 'true'
         uses: snapcore/action-publish@v1
         with:
-          store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+          store_login: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: beta,candidate
 
@@ -330,9 +212,9 @@ jobs:
           echo "Skipping publish to beta/candidate - version ${{ steps.get-snap-version.outputs.version }} already exists for ${{ matrix.architecture }}"
 
   promote-to-stable:
-    if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre')
+    if: startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, 'pre') && needs.credentials-check.outputs.present == 'true'
     name: Promote to stable
-    needs: [publish]
+    needs: [publish, credentials-check]
     uses: ./.github/workflows/promote-to-stable.yml
     secrets:
-      METANORMA_SNAPCRAFT_TOKEN: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}

@@ -52,13 +52,15 @@ parts:
         exit 1
       fi
 
-      asset="tebako-${TEBAKO_VERSION}-linux-gnu-${ARCH_NAME}"
-      url="https://github.com/tamatebako/tebako/releases/download/v${TEBAKO_VERSION}/${asset}"
-      curl --fail --silent --show-error --location --retry 3 -o tebako "$url"
-      curl --fail --silent --show-error --location --retry 3 -o "${asset}.sha256" "${url}.sha256"
-      expected="$(awk '{print $1}' "${asset}.sha256")"
-      echo "${expected}  tebako" | sha256sum -c -
-      install -D -m 0755 tebako "$SNAPCRAFT_PART_INSTALL/bin/tebako"
+      for tool in tebako tebako-shim; do
+        asset="${tool}-${TEBAKO_VERSION}-linux-gnu-${ARCH_NAME}"
+        url="https://github.com/tamatebako/tebako/releases/download/v${TEBAKO_VERSION}/${asset}"
+        curl --fail --silent --show-error --location --retry 3 -o "$tool" "$url"
+        curl --fail --silent --show-error --location --retry 3 -o "${asset}.sha256" "${url}.sha256"
+        expected="$(awk '{print $1}' "${asset}.sha256")"
+        echo "${expected}  ${tool}" | sha256sum -c -
+        install -D -m 0755 "$tool" "$SNAPCRAFT_PART_INSTALL/bin/${tool}"
+      done
 
   launcher:
     plugin: nil

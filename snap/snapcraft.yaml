@@ -23,6 +23,11 @@ apps:
     environment:
       GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
       GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
+      # The staged fontconfig keeps its config and fonts under $SNAP;
+      # point the JVM's fontconfig at them and keep the cache writable.
+      FONTCONFIG_PATH: $SNAP/etc/fonts
+      XDG_CACHE_HOME: $SNAP_USER_DATA/.cache
+      XDG_DATA_DIRS: $SNAP/usr/share:/usr/local/share:/usr/share
     plugs:
       - browser-support
       - network

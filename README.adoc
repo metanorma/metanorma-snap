@@ -184,9 +184,10 @@ email = metanorma@ribose.com
 ----
 
 NOTE: In this repository, the exported login `AABBB...==` value is placed in
-GitHub Actions' secret named `SNAPCRAFT_STORE_CREDENTIALS`. The store publish
-and promote jobs run only when this secret is configured; without it they are
-skipped and the workflow still builds and tests the snap.
+the `metanorma` org secret named `METANORMA_SNAPCRAFT_TOKEN` (visibility: all
+repos). The store publish and promote jobs run only when this secret is
+configured; without it they are skipped and the workflow still builds and
+tests the snap.
 
 
 == Release workflow (`main.yml`)
@@ -198,7 +199,7 @@ Every push and pull request builds the snap natively for `amd64` and `arm64`
 and runs an acceptance job that installs the snap in strict confinement and
 compiles a real ISO document.
 
-When the `SNAPCRAFT_STORE_CREDENTIALS` secret is configured, the main workflow
+When the `METANORMA_SNAPCRAFT_TOKEN` secret is configured, the main workflow
 additionally handles releases based on git events:
 
 * **Main branch pushes**: Automatically releases to the `edge` channel for

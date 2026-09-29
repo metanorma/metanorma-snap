@@ -124,13 +124,13 @@ jobs:
     steps:
       - id: check
         env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
         run: |
           if [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ]; then
             echo "present=true" >> "$GITHUB_OUTPUT"
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::SNAPCRAFT_STORE_CREDENTIALS is not configured; snap store upload jobs will be skipped."
+            echo "::notice::the METANORMA_SNAPCRAFT_TOKEN org secret is not configured; snap store upload jobs will be skipped."
           fi
 
   publish:
@@ -198,7 +198,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && steps.check-main-channels.outputs.should_publish == 'true'
         uses: snapcore/action-publish@v1
         with:
-          store_login: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: edge,beta
 
@@ -212,7 +212,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') && steps.check-tag-channels.outputs.should_publish == 'true'
         uses: snapcore/action-publish@v1
         with:
-          store_login: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
           release: beta,candidate
 
@@ -227,4 +227,4 @@ jobs:
     needs: [publish, credentials-check]
     uses: ./.github/workflows/promote-to-stable.yml
     secrets:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}

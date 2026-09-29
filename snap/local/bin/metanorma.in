@@ -1,0 +1,29 @@
+#!/bin/sh
+# metanorma snap launcher.
+#
+# Installs the pinned metanorma payload into the per-user tebako store on
+# first run (or after a snap refresh changes the pinned version), then
+# dispatches through the tebako shim. The store lives under
+# $SNAP_USER_DATA/tebako, which is writable under strict confinement.
+set -eu
+
+METANORMA_VERSION="@METANORMA_VERSION@"
+
+TEBAKO_HOME="${TEBAKO_HOME:-$SNAP_USER_DATA/tebako}"
+export TEBAKO_HOME
+
+shim="$TEBAKO_HOME/shims/metanorma"
+marker="$TEBAKO_HOME/.metanorma-snap-version"
+
+installed=""
+[ -f "$marker" ] && installed="$(cat "$marker")"
+
+if [ ! -x "$shim" ] || [ "$installed" != "$METANORMA_VERSION" ]; then
+  echo "metanorma: installing metanorma $METANORMA_VERSION and its runtimes" >&2
+  echo "metanorma: this is a one-time download; subsequent runs start immediately" >&2
+  mkdir -p "$TEBAKO_HOME"
+  "$SNAP/bin/tebako" install "metanorma@$METANORMA_VERSION"
+  echo "$METANORMA_VERSION" > "$marker"
+fi
+
+exec "$shim" "$@"

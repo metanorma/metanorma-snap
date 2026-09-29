@@ -3,9 +3,11 @@
 name: metanorma
 base: core24
 summary: Metanorma standards publication suite
-description: "Metanorma is the award-winning, open-source, digital standards suite for authoring and publishing adopted by SDOs worldwide. Start delivering tomorrow's standards, today."
+description: "Metanorma is the award-winning, open-source, digital standards suite for authoring and publishing adopted by SDOs worldwide. Start delivering tomorrow's standards, today.
+
+  This snap bundles the tebako CLI. On the first run of `metanorma` the launcher downloads and checksum-verifies the metanorma payload and its runtimes (Ruby, OpenJDK, Python) into a per-user store under the snap's data directory; every later run starts directly from that store."
 grade: stable
-adopt-info: packed-mn
+adopt-info: tebako-cli
 confinement: strict
 platforms:
   amd64:
@@ -15,97 +17,56 @@ platforms:
     build-on: [arm64]
     build-for: [arm64]
 
-layout:
-  /etc/java-21-openjdk:
-    bind: $SNAP/etc/java-21-openjdk
-  /usr/bin/java:
-    symlink: $SNAP/usr/lib/jvm/java-21-openjdk-$CRAFT_ARCH_BUILD_FOR/bin/java
 apps:
   metanorma:
     command: bin/metanorma
-    environment:
-      PATH: $SNAP/local/bin:$SNAP/usr/bin:$PATH
-      DEBUG: "*:*"
-      GIT_EXEC_PATH: $SNAP/usr/lib/git-core # https://forum.snapcraft.io/t/using-git-from-a-program/12599/11?u=camobap
-      GIT_CONFIG_NOSYSTEM: 'true' # https://github.com/metanorma/metanorma-snap/issues/12
-      XDG_DATA_HOME: $SNAP/usr/share # NPE in sun.awt.FontConfiguration.getVersion, https://bugs.launchpad.net/ubuntu/+source/snapd/+bug/1576303
     plugs:
       - browser-support
       - network
       - gsettings
       - home
+
 parts:
-  packed-mn:
-    plugin: dump
+  tebako-cli:
+    plugin: nil
     source: .
+    build-packages:
+      - curl
+      - ca-certificates
     override-pull: |
-      # Use contents of the VERSION file (e.g. 1.2.3) as the snap package version
-      export VERSION=$(cat $SNAPCRAFT_PROJECT_DIR/VERSION)
-      echo "Setting snap version to '$VERSION'"
+      craftctl default
+
+      # Snap version comes from the VERSION file; the bundled tebako CLI
+      # release is pinned in the TEBAKO_VERSION file.
+      VERSION=$(cat $SNAPCRAFT_PROJECT_DIR/VERSION)
+      TEBAKO_VERSION=$(cat $SNAPCRAFT_PROJECT_DIR/TEBAKO_VERSION)
+      echo "Snap version '$VERSION', tebako CLI '$TEBAKO_VERSION'"
       craftctl set version="$VERSION"
 
       if [ "$CRAFT_ARCH_BUILD_FOR" = "amd64" ]; then
         ARCH_NAME="x86_64"
       elif [ "$CRAFT_ARCH_BUILD_FOR" = "arm64" ]; then
-        ARCH_NAME="aarch64"
+        ARCH_NAME="arm64"
       else
         echo "Unsupported architecture: $CRAFT_ARCH_BUILD_FOR"
         exit 1
       fi
 
-      curl --silent --show-error --location "https://github.com/metanorma/packed-mn/releases/download/v$VERSION/metanorma-linux-${ARCH_NAME}.tgz" | tar xz
-      # Rename the extracted binary to a consistent name
-      mv metanorma-linux-${ARCH_NAME} metanorma-binary
-    override-build: |
-      # Copy to install directory
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp metanorma-binary $SNAPCRAFT_PART_INSTALL/bin/metanorma
-      craftctl default
-    build-packages:
-      - curl
-    stage-packages:
-      - git-core
-      - zlib1g
-      - libgcrypt20
-      - liblzma5
-      - libdb5.3
-      - libselinux1
-      - libsystemd0
-      - libtinfo6
-      - libudev1
-      - libmspack-dev
-  openjdk:
+      asset="tebako-${TEBAKO_VERSION}-linux-gnu-${ARCH_NAME}"
+      url="https://github.com/tamatebako/tebako/releases/download/v${TEBAKO_VERSION}/${asset}"
+      curl --fail --silent --show-error --location --retry 3 -o tebako "$url"
+      curl --fail --silent --show-error --location --retry 3 -o "${asset}.sha256" "${url}.sha256"
+      expected="$(awk '{print $1}' "${asset}.sha256")"
+      echo "${expected}  tebako" | sha256sum -c -
+      install -D -m 0755 tebako "$SNAPCRAFT_PART_INSTALL/bin/tebako"
+
+  launcher:
     plugin: nil
-    override-build: |
-      mkdir -p $SNAPCRAFT_PART_INSTALL
-      # Create symbolic links for Java executables following MakeMKV pattern
-      JDK=$(find /usr/lib/jvm -type d -name "java-21-openjdk-*" | head -n1 | xargs basename)
-      JDKBIN=../lib/jvm/$JDK/bin
-      for exec in java; do
-        ln -sf $JDKBIN/$exec $SNAPCRAFT_PART_INSTALL/usr/bin/$exec
-      done
-    build-packages:
-      - curl
-      # https://askubuntu.com/questions/1054854/snap-package-error-uploading
-      - ca-certificates
-      - ca-certificates-java
-      - openjdk-21-jre-headless
-    stage-packages:
-      - libgcrypt20
-      - liblzma5
-      - libselinux1
-      - libsystemd0
-      - zlib1g
-      - graphviz
-      - on amd64: [openjdk-21-jre-headless:amd64]
-      - on arm64: [openjdk-21-jre-headless:arm64]
-  xml2rfc:
-    plugin: python
     source: .
-    python-packages: [xml2rfc]
-    stage-packages:
-      - libbz2-1.0
-      - libtinfo6
-      - zlib1g
-      - libdb5.3
-      - libncursesw6
+    override-build: |
+      VERSION=$(cat $SNAPCRAFT_PROJECT_DIR/VERSION)
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      sed -e "s/@METANORMA_VERSION@/${VERSION}/" \
+          $SNAPCRAFT_PART_SRC/snap/local/bin/metanorma.in \
+          > $SNAPCRAFT_PART_INSTALL/bin/metanorma
+      chmod 0755 $SNAPCRAFT_PART_INSTALL/bin/metanorma

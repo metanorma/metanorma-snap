@@ -73,12 +73,7 @@ jobs:
           - architecture: amd64
             experimental: false
           - architecture: arm64
-            # Experimental: metanorma's inkscape dependency is not
-            # published for aarch64-linux-gnu (tebako-packages/inkscape
-            # 1.4.3-4 ships only x86_64-linux-gnu / macos-arm64 /
-            # windows-ucrt64), so the first-run install fails closed
-            # with exit 69 until the payload gains that triplet.
-            experimental: true
+            experimental: false
     steps:
       - uses: actions/checkout@v4
 

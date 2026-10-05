@@ -21,15 +21,14 @@ jobs:
   promote:
     name: Promote revision to stable
     runs-on: ubuntu-latest
+    # The snapcraft CLI reads SNAPCRAFT_STORE_CREDENTIALS natively — the
+    # `login --with` verb was removed upstream. Job level so both the
+    # list-revisions probe and the release read it.
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
     steps:
       - name: Install snapcraft
         run: sudo snap install snapcraft --classic
-
-      - name: Login to snapcraft
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
-        run: |
-          echo "$SNAPCRAFT_STORE_CREDENTIALS" | snapcraft login --with -
 
       - name: Promote specific revision to stable channel
         if: ${{ inputs.revision }}

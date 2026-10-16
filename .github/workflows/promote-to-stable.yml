@@ -57,16 +57,13 @@ jobs:
           else
             architectures=$(yq eval '.platforms | keys' snap/snapcraft.yaml -o json)
           fi
-          ARCHITECTURES_JSON="$architectures" python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          import os
-          architectures = json.loads(os.environ['ARCHITECTURES_JSON'])
-          if not isinstance(architectures, list) or not architectures:
-              raise SystemExit('Expected a nonempty architecture array')
-          if any(not isinstance(arch, str) or not arch.isalnum() for arch in architectures):
-              raise SystemExit('Invalid architecture array')
-          print('value=' + ','.join(architectures))
-          PY
+          architectures=$(jq -er '
+            if type == "array" and length > 0 and
+               all(.[]; type == "string" and test("^[a-z][a-z0-9]*$"))
+            then join(",")
+            else error("Expected a nonempty architecture array")
+            end' <<< "$architectures")
+          echo "value=$architectures" >> "$GITHUB_OUTPUT"
 
       - name: Validate, promote and verify all architectures
         env:
@@ -79,4 +76,4 @@ jobs:
           if [ -n "$CANDIDATE_REVISIONS" ]; then
             args+=(--revisions "$CANDIDATE_REVISIONS")
           fi
-          python3 .github/scripts/promote-snap.py "${args[@]}"
+          bash .github/scripts/promote-snap.sh "${args[@]}"

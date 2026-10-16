@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test promotion without Store access
-        run: python3 -m unittest discover -s tests -p 'test_promote_snap.py' -v
+        run: bash tests/test-promote-snap.sh

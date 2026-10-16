@@ -211,8 +211,8 @@ channel using the `snapcraft release` command.
 
 === General
 
-For cases where you need to promote an existing revision to the stable channel
-without rebuilding, use the manual promotion workflow.
+To promote an existing complete candidate version to stable without rebuilding,
+use the manual promotion workflow.
 
 === Finding revision numbers
 
@@ -229,48 +229,41 @@ snapcraft list-revisions metanorma
 ----
 
 
-=== Manually promoting a version to stable using the workflow
+=== Promoting a complete version to stable
 
-. Navigate to the GitHub Actions tab in the repository
-. Select the "promote-to-stable" workflow
-. Click "Run workflow"
-. Enter the revision number you want to promote to stable
-. Click "Run workflow" to execute
+The workflow requires the exact candidate version and validates every architecture
+in `snap/snapcraft.yaml` before changing stable. The automated release passes its
+version and architecture matrix after all publish jobs succeed. Missing, stale,
+ambiguous or unavailable candidates stop promotion without releasing anything.
 
-[example]
-====
-To promote revision 42 to stable:
+. Navigate to the GitHub Actions tab in the repository.
+. Select the "promote-to-stable" workflow and click "Run workflow".
+. Enter the exact candidate version, for example `1.17.0`.
+. Optionally enter the complete candidate revision set, for example `294,295`.
+  These revisions must match that version and cover every expected architecture.
+. Run the workflow and check that stable verification succeeds for all architectures.
 
-. Go to https://github.com/metanorma/metanorma-snap/actions
-. Click on "promote-to-stable" workflow
-. Click "Run workflow" button
-. Enter `42` in the revision field
-. Click "Run workflow"
-====
+The old single `revision` workflow input is replaced by `version` and optional
+`revisions`. Manual runs read the architecture set from the selected ref's recipe;
+use a ref containing this workflow. Explicit revisions cannot bypass candidate
+validation, so an older rollback must first be available in candidate for all
+architectures. Direct Store administration remains outside this workflow.
 
-
-=== Manually promoting revisions
-
-For cases where you need to promote an existing revision to the stable channel
-without rebuilding, run the following local commands (e.g. through Docker).
-
-[source,sh]
-----
-snapcraft login --with /export/exported.txt
-snapcraft release metanorma <revision> stable
-----
-
+Promotion freezes the validated revision set and releases each revision separately.
+The Store does not provide an atomic multi-revision release through this command.
+If a release or final verification fails, the workflow fails and reports completed
+revisions; stable may be partially updated. Inspect the reported revisions and
+Store status before retrying. Rerunning validates the complete candidate set again.
 
 === Use cases for manual promotion
 
 The manual promotion workflow is useful for:
 
-* **Hotfix scenarios**: Promote a specific tested revision without waiting for
-  the full build pipeline
-* **Rollback**: Promote an older revision back to stable if issues are
-  discovered
-* **Recovery**: When automated promotion fails and needs manual intervention
-* **Testing**: Promote specific revisions for validation purposes
+* **Hotfix scenarios**: Promote a tested candidate version across all architectures
+  without rebuilding
+* **Rollback**: Promote an older version after making it available in candidate
+  for every architecture
+* **Recovery**: Retry a complete promotion after inspecting a failed run
 
 == Copyright & License
 

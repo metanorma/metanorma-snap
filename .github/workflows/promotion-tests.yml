@@ -1,0 +1,17 @@
+name: Promotion tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  promotion-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test promotion without Store access
+        run: bash tests/test-promote-snap.sh

@@ -3,51 +3,77 @@ name: promote-to-stable
 on:
   workflow_dispatch:
     inputs:
-      revision:
-        description: 'Revision number to promote to stable'
+      version:
+        description: 'Exact candidate version to promote (for example, 1.17.0)'
         required: true
+        type: string
+      revisions:
+        description: 'Optional complete comma-separated candidate revision set'
+        required: false
         type: string
   workflow_call:
     inputs:
-      revision:
-        description: 'Revision number to promote to stable'
+      version:
+        description: 'Exact version published by this release'
+        required: true
+        type: string
+      architectures:
+        description: 'JSON architecture array from the publishing matrix'
+        required: true
+        type: string
+      revisions:
+        description: 'Optional complete comma-separated candidate revision set'
         required: false
         type: string
     secrets:
       METANORMA_SNAPCRAFT_TOKEN:
         required: true
 
+concurrency:
+  group: metanorma-stable-promotion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   promote:
-    name: Promote revision to stable
+    name: Promote complete release to stable
     runs-on: ubuntu-latest
-    # The snapcraft CLI reads SNAPCRAFT_STORE_CREDENTIALS natively — the
-    # `login --with` verb was removed upstream. Job level so both the
-    # list-revisions probe and the release read it.
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+    timeout-minutes: 15
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install snapcraft
         run: sudo snap install snapcraft --classic
 
-      - name: Promote specific revision to stable channel
-        if: ${{ inputs.revision }}
+      - name: Resolve expected architectures
+        id: architectures
+        env:
+          INPUT_ARCHITECTURES: ${{ inputs.architectures }}
         run: |
-          snapcraft release metanorma ${{ inputs.revision }} stable
-          echo "✅ Successfully promoted revision ${{ inputs.revision }} to stable channel"
-          echo "The metanorma snap package is now available in the stable channel."
-
-      - name: Promote latest candidate revision to stable channel
-        if: ${{ !inputs.revision }}
-        run: |
-          # Get the latest revision from candidate channel
-          REVISION=$(snapcraft list-revisions metanorma | grep candidate | head -1 | awk '{print $1}')
-          if [ -n "$REVISION" ]; then
-            echo "Promoting latest candidate revision $REVISION to stable"
-            snapcraft release metanorma $REVISION stable
-            echo "✅ Successfully promoted revision $REVISION to stable channel"
-            echo "The metanorma snap package is now available in the stable channel."
+          if [ -n "$INPUT_ARCHITECTURES" ]; then
+            architectures="$INPUT_ARCHITECTURES"
           else
-            echo "No revisions found in candidate channel"
-            exit 1
+            architectures=$(yq eval '.platforms | keys' snap/snapcraft.yaml -o json)
           fi
+          architectures=$(jq -er '
+            if type == "array" and length > 0 and
+               all(.[]; type == "string" and test("^[a-z][a-z0-9]*$"))
+            then join(",")
+            else error("Expected a nonempty architecture array")
+            end' <<< "$architectures")
+          echo "value=$architectures" >> "$GITHUB_OUTPUT"
+
+      - name: Validate, promote and verify all architectures
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
+          TARGET_VERSION: ${{ inputs.version }}
+          EXPECTED_ARCHITECTURES: ${{ steps.architectures.outputs.value }}
+          CANDIDATE_REVISIONS: ${{ inputs.revisions }}
+        run: |
+          args=(--version "$TARGET_VERSION" --architectures "$EXPECTED_ARCHITECTURES")
+          if [ -n "$CANDIDATE_REVISIONS" ]; then
+            args+=(--revisions "$CANDIDATE_REVISIONS")
+          fi
+          bash .github/scripts/promote-snap.sh "${args[@]}"

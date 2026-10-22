@@ -228,7 +228,10 @@ jobs:
         with:
           store_login: ${{ secrets.METANORMA_SNAPCRAFT_TOKEN }}
           snap: ${{ steps.get-snap-file.outputs.snap_file }}
-          release: edge,beta
+          # A forced republish also lands on candidate, because the stable
+          # promotion reads the candidate revision set: without this the
+          # promotion would find the older build and move nothing.
+          release: ${{ inputs.force_publish && 'edge,beta,candidate' || 'edge,beta' }}
 
       - name: Skip publishing to edge and beta (already exists)
         if: github.ref == 'refs/heads/main' && steps.check-main-channels.outputs.should_publish == 'false'

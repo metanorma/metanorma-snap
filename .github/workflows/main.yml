@@ -1,6 +1,18 @@
 name: main
 
 on:
+  # A recipe can change while VERSION (the payload pin) does not — the
+  # TEBAKO_VERSION roll is the canonical case: same metanorma version, new
+  # build. The store's version-only probe would skip that build forever, so
+  # a deliberate republish is an explicit dispatch input rather than a
+  # silent behaviour change. Publishing still waits for the strict-
+  # confinement acceptance legs (the publish job needs them).
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Republish this version even when edge/beta already carry it (a rebuilt recipe at an unchanged version)'
+        type: boolean
+        default: false
   push:
     branches: [ main ]
     tags: [ v* ]
@@ -175,6 +187,11 @@ jobs:
           # An error must fail loudly — collapsing it into "skip" silently
           # strands the release (v1.17.0's first main run did exactly this
           # when snapcraft was not installed here).
+          if [ "${{ inputs.force_publish }}" = "true" ]; then
+            echo "force_publish is set — uploading a fresh revision even though the channel probe may match"
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           rc=0
           .github/scripts/check-snap-version.sh \
             --channels "edge,beta" \

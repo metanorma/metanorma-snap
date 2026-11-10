@@ -12,6 +12,16 @@ METANORMA_VERSION="@METANORMA_VERSION@"
 TEBAKO_HOME="${TEBAKO_HOME:-$SNAP_USER_DATA/tebako}"
 export TEBAKO_HOME
 
+# Fontist's root (fonts, formula versions, download caches) defaults to
+# ~/.fontist, which under strict confinement is $SNAP_USER_DATA/.fontist —
+# a PER-REVISION directory: every snap refresh strands the fonts, and CI
+# cannot cache a path that changes with the revision
+# (metanorma/metanorma-snap#14). $SNAP_USER_COMMON survives refreshes and
+# is a stable cache key (~/snap/metanorma/common/.fontist). A pre-set
+# FONTIST_PATH always wins.
+FONTIST_PATH="${FONTIST_PATH:-$SNAP_USER_COMMON/.fontist}"
+export FONTIST_PATH
+
 shim="$TEBAKO_HOME/shims/metanorma"
 marker="$TEBAKO_HOME/.metanorma-snap-version"
 
